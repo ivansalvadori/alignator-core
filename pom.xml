@@ -25,35 +25,79 @@
 	</build>
 
 	<dependencies>
-	<dependency>
+		<dependency>
 			<groupId>fr.inrialpes.exmo</groupId>
 			<artifactId>ontowrap</artifactId>
-			<version>4.8</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/aroma/ontowrap/ontowrap.jar</systemPath>
+			<version>2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.inrialpes.exmo</groupId>
 			<artifactId>aroma</artifactId>
 			<version>1.2</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/aroma/aroma.jar</systemPath>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>fr.inrialpes.exmo</groupId>
 			<artifactId>align</artifactId>
-			<version>4.8</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/aroma/alignapi/align.jar</systemPath>
+			<version>2.5</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>fr.inrialpes.exmo</groupId>
 			<artifactId>procalign</artifactId>
-			<version>4.8</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/aroma/alignapi/procalign.jar</systemPath>
+			<version>2.5</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.inrialpes.exmo</groupId>
+			<artifactId>ontosim</artifactId>
+			<version>2.5</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-snowball -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-snowball</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.hp.hpl.jena/jena -->
+		<dependency>
+			<groupId>com.hp.hpl.jena</groupId>
+			<artifactId>jena</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.hp.hpl.jena</groupId>
+			<artifactId>arq</artifactId>
+			<version>2.8.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.wcohen.ss</groupId>
+			<artifactId>secondstring</artifactId>
+			<version>2.5</version>
 		</dependency>
 		
+		
+
 	</dependencies>
 
 </project>
