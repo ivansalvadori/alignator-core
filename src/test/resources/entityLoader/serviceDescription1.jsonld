@@ -1,0 +1,17 @@
+{
+  "semanticResources": [
+    {
+      "entity": "http://ontology1#Entity1",
+      "uriTemplates": [
+        {
+          "method": "GET",
+          "uri": "/service1{?x,y}",
+          "parameters": {
+            "x": "http://ontology1#property1",
+            "y": "http://ontology1#property2"
+          }
+        }
+      ]
+    }
+  ]
+}

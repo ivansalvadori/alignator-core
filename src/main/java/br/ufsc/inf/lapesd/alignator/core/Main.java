@@ -15,12 +15,12 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String[] x = { "/home/ivan/Documents/temp/alignator-casestudy/7d3714e8-ad60-477f-b06a-e2804cb6dfba_startingWithWorkersIDandName_0_ontology-payment.owl",
-                "/home/ivan/Documents/temp/alignator-casestudy/7d3714e8-ad60-477f-b06a-e2804cb6dfba_startingWithWorkersIDandName_0_ontology-worker.owl" };
+        String[] x = { "/home/ivan/Documents/temp/executable/executable/8d99456f-9289-4ac9-acb7-f0db04d6d8e6_startingWithWorkersIDonly_0_ontology-payment.owl",
+                "/home/ivan/Documents/temp/executable/executable/8d99456f-9289-4ac9-acb7-f0db04d6d8e6_startingWithWorkersIDonly_0_ontology-worker.owl" };
 
         try {
             Properties p = new Properties();
-            // p.setProperty("lexicalSim", "true");
+            p.setProperty("lexicalSim", "true");
 
             AROMA align = new AROMA();
             align.skos = "true".equals(p.getProperty("skos"));

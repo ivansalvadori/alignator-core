@@ -1,52 +1,49 @@
 package br.ufsc.inf.lapesd.alignator.core;
 
-import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
+import java.util.Set;
 
-import org.semanticweb.owl.align.AlignmentException;
-import org.semanticweb.owl.align.Cell;
-
-import fr.inrialpes.exmo.align.impl.ObjectAlignment;
-import fr.inrialpes.exmo.aroma.AROMA;
+import br.ufsc.inf.lapesd.alignator.core.entity.loader.EntityLoader;
+import br.ufsc.inf.lapesd.alignator.core.entity.loader.SemanticMicroserviceDescription;
+import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyManager;
+import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.AromaOntologyMatcher;
 
 public class Alignator {
 
-    public List<Alignment> align(String pathToOntology1, String pathToOntology2) {
+    private AromaOntologyMatcher aromaOntologyMatcher = new AromaOntologyMatcher();
+    private OntologyManager ontologyManager = new OntologyManager();
+    private EntityLoader entityLoader = new EntityLoader();
+    private Map<String, List<SemanticMicroserviceDescription>> mapOntologyBaseNamespaceServiceDesciptions = new HashMap<>();
 
-        List<Alignment> alignments = new ArrayList<>();
+    public void setEntityLoader(EntityLoader entityLoader) {
+        this.entityLoader = entityLoader;
+    }
 
-        try {
-            Properties p = new Properties();
-            // p.setProperty("lexicalSim", "true");
+    public void registerService(SemanticMicroserviceDescription semanticMicroserviceDescription, String ontology) {
+        String baseNamespace = ontologyManager.registerOntology(ontology);
 
-            AROMA align = new AROMA();
-            align.skos = "true".equals(p.getProperty("skos"));
-            URI ontoURI1 = (new File(pathToOntology1)).toURI();
-            URI ontoURI2 = (new File(pathToOntology2)).toURI();
-            align.init(ontoURI1, ontoURI2);
-            align.align(new ObjectAlignment(), p);
+        List<SemanticMicroserviceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
+        if (serviceDescriptions == null) {
+            serviceDescriptions = new ArrayList<>();
+        }
+        serviceDescriptions.add(semanticMicroserviceDescription);
+        mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
+    }
 
-            Enumeration<Cell> elements = align.getElements();
-            while (elements.hasMoreElements()) {
-                Cell nextElement = elements.nextElement();
-                Alignment alignment = new Alignment();
-                alignment.setRelation(nextElement.getRelation().getRelation());
-                alignment.setStrength(nextElement.getStrength());
-                alignment.setUri1(nextElement.getObject1AsURI().toString());
-                alignment.setUri2(nextElement.getObject2AsURI().toString());
-                alignments.add(alignment);
+    public void loadEntitiesAndAlignOntologies(String exampleOfEntity) {
+        Set<String> ontologyBaseNamespaces = mapOntologyBaseNamespaceServiceDesciptions.keySet();
+        for (String baseNamespace : ontologyBaseNamespaces) {
+            List<SemanticMicroserviceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
+            for (SemanticMicroserviceDescription semanticMicroserviceDescription : serviceDescriptions) {
+                List<String> loadedEntities = entityLoader.loadEntitiesFromServices(exampleOfEntity, semanticMicroserviceDescription);
+                ontologyManager.addEntitiesToOntology(loadedEntities, baseNamespace);
             }
         }
 
-        catch (AlignmentException e) {
-            e.printStackTrace();
-        }
-
-        return alignments;
+        List<String> allOntologiesWithEntities = ontologyManager.getAllOntologiesWithEntities();
+        aromaOntologyMatcher.align(allOntologiesWithEntities);
     }
-
 }

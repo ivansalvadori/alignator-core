@@ -1,0 +1,9 @@
+{
+  "@id": "10.1.1.1:8081/service1/1",
+  "@type": "http://ontology1#Entity1",
+   "http://ontology1#property1": "value1",
+   "http://ontology1#property2": "value2",  
+   "http://ontology1#property3": "value3",
+   "http://ontology1#property4": "value4",
+   "http://ontology1#property5": "value5"   
+}
