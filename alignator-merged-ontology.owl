@@ -1,0 +1,106 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:j.0="http://ontology2#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:j.1="http://ontology1#" > 
+  <rdf:Description rdf:nodeID="A0">
+    <rdf:type rdf:resource="http://ontology1#Entity1"/>
+    <j.1:property1>value1</j.1:property1>
+    <j.1:property2>value2</j.1:property2>
+    <j.1:property3>value3</j.1:property3>
+    <j.1:property4>value4</j.1:property4>
+    <j.1:property5>value5</j.1:property5>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property3">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property5">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#Entity2">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A1">
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+    <j.0:property1>value1</j.0:property1>
+    <j.0:property2 rdf:nodeID="A2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#property1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A2">
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+    <j.0:property3>value3</j.0:property3>
+    <j.0:property4>value4</j.0:property4>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#property3">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#property5">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A3">
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+    <j.0:property3>value3</j.0:property3>
+    <j.0:property4>value4</j.0:property4>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A4">
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+    <j.0:property3>value3</j.0:property3>
+    <j.0:property4>value4</j.0:property4>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#Entity1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property2">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://ontology2#Entity1"/>
+    <rdfs:range rdf:resource="http://ontology2#Entity2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property4">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology3#">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A5">
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+    <j.0:property3>value3</j.0:property3>
+    <j.0:property4>value4</j.0:property4>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#property2">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#property4">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A6">
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+    <j.0:property1>value1</j.0:property1>
+    <j.0:property2 rdf:nodeID="A3"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A7">
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+    <j.0:property1>value1</j.0:property1>
+    <j.0:property2 rdf:nodeID="A4"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology1#Entity1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A8">
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+    <j.0:property1>value1</j.0:property1>
+    <j.0:property2 rdf:nodeID="A5"/>
+  </rdf:Description>
+</rdf:RDF>

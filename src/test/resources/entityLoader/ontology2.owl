@@ -8,6 +8,19 @@
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
     <owl:Ontology rdf:about="http://ontology2#"/>
     
+    <owl:Class rdf:about="http://ontology2#Entity1"/>
+    <owl:Class rdf:about="http://ontology2#Entity2"/>
+    
+    <owl:DatatypeProperty rdf:about="http://ontology2#property1"/>
+    <owl:DatatypeProperty rdf:about="http://ontology2#property3"/>
+    <owl:DatatypeProperty rdf:about="http://ontology2#property4"/>
+    <owl:DatatypeProperty rdf:about="http://ontology2#property5"/>
+    
+    <owl:ObjectProperty rdf:about="http://ontology2#property2">
+        <rdfs:domain rdf:resource="http://ontology2#Entity1"/>
+        <rdfs:range rdf:resource="http://ontology2#Entity2"/>
+    </owl:ObjectProperty>
+    
 </rdf:RDF>
 
 

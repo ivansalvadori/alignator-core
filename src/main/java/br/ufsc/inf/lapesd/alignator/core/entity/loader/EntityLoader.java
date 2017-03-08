@@ -9,6 +9,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import com.google.gson.JsonElement;
@@ -17,14 +23,14 @@ import com.google.gson.JsonParser;
 
 public class EntityLoader {
 
-    public List<String> loadEntitiesFromServices(String exampleOfEntity, SemanticMicroserviceDescription semanticMicroserviceDescription) {
+    public List<String> loadEntitiesFromServices(String exampleOfEntity, ServiceDescription semanticMicroserviceDescription) {
 
         List<String> extractedValues = new ArrayList<>(extractValues(exampleOfEntity));
 
         List<SemanticResource> semanticResources = semanticMicroserviceDescription.getSemanticResources();
-        createLinks(extractedValues, semanticResources);
-
-        return null;
+        List<String> linksToVisit = createLinks(extractedValues, semanticResources);
+        List<String> loadedEntities = visitLinksAndGetEntities(linksToVisit);
+        return loadedEntities;
     }
 
     protected List<String> createLinks(List<String> extractedValues, List<SemanticResource> semanticResources) {
@@ -66,7 +72,6 @@ public class EntityLoader {
 
         JsonElement parsedEntity = new JsonParser().parse(exampleOfEntity);
         if (parsedEntity.isJsonObject()) {
-
             JsonObject jsonObject = parsedEntity.getAsJsonObject();
             Set<Entry<String, JsonElement>> keys = jsonObject.entrySet();
             for (Entry<String, JsonElement> key : keys) {
@@ -81,10 +86,30 @@ public class EntityLoader {
                     entityValues.addAll(extractValues(innerObject));
                 }
             }
-
         }
-
         return entityValues;
+    }
+
+    protected List<String> visitLinksAndGetEntities(List<String> linksToVisit) {
+        List<String> loadedEntities = new ArrayList<>();
+        Client client = ClientBuilder.newClient();
+        for (String link : linksToVisit) {
+            WebTarget webTarget = client.target(link).queryParam("linkedatorOptions", "linkVerify");
+            Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
+            try {
+                System.out.println(String.format("loading entity from: %s", link));
+                Response response = invocationBuilder.get();
+
+                int status = response.getStatus();
+                if (status == 200) {
+                    String loadedEntity = response.readEntity(String.class);
+                    loadedEntities.add(loadedEntity);
+                }
+            } catch (Exception e) {
+
+            }
+        }
+        return loadedEntities;
     }
 
 }

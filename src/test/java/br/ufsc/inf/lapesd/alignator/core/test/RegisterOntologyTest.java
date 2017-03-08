@@ -8,8 +8,8 @@ import org.junit.Test;
 import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyAlreadyRegisteredException;
 import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyManager;
 
-public class OntologyManagerTest {
-
+public class RegisterOntologyTest {
+    
     @Test(expected = OntologyAlreadyRegisteredException.class)
     public void mustPreventRegisteringTheSameOntologyTwice() throws IOException {
 

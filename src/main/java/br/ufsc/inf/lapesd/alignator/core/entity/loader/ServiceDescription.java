@@ -8,7 +8,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import com.google.gson.Gson;
 
-public class SemanticMicroserviceDescription {
+public class ServiceDescription {
 
     private String ipAddress;
     private String serverPort;
@@ -61,5 +61,4 @@ public class SemanticMicroserviceDescription {
     public String toString() {
         return new Gson().toJson(this);
     }
-
 }

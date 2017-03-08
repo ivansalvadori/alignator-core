@@ -4,12 +4,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class Permutations<T> {
 
     public Set<List<String>> permute(Collection<String> input, int n) {
         Permutations<String> obj = new Permutations<>();
+
+        // Limit to permutations
+        while (input.size() >= 5) {
+            int inputIndexToRemove = new Random().nextInt(5);
+            List<String> listInput = new ArrayList<>(input);
+            listInput.remove(inputIndexToRemove);
+            input.clear();
+            input.addAll(listInput);
+        }
+
         Collection<List<String>> output = obj.permuteNxN(input);
         Set<List<String>> pnr = null;
 

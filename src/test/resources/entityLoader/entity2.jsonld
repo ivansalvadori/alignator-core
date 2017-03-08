@@ -1,9 +1,10 @@
 {
-  "@id": "10.1.1.1:8082/service1/1",
-  "@type": "http://ontology1#Entity1",
-   "http://ontology1#property1": "value1",
-   "http://ontology1#property2": {
-      "http://ontology1#property3": "value3",
-      "http://ontology1#property4": "value4"
+  "@id": "10.1.1.1:8082/service2/2",
+  "@type": "http://ontology2#Entity1",
+   "http://ontology2#property1": "value1",
+   "http://ontology2#property2": {
+      "@type": "http://ontology2#Entity2",
+      "http://ontology2#property3": "value3",
+      "http://ontology2#property4": "value4"
    }  
 }

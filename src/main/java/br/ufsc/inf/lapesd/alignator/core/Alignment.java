@@ -39,4 +39,9 @@ public class Alignment {
         this.relation = relation;
     }
 
+    @Override
+    public String toString() {
+        return "Alignment [uri1=" + uri1 + ", uri2=" + uri2 + ", strength=" + strength + ", relation=" + relation + "]";
+    }
+
 }

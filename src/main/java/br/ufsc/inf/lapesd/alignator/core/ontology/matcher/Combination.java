@@ -1,4 +1,4 @@
-package br.ufsc.inf.lapesd.alignator.core.entity.loader;
+package br.ufsc.inf.lapesd.alignator.core.ontology.matcher;
 
 import java.util.ArrayList;
 import java.util.List;
