@@ -5,6 +5,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -27,26 +31,24 @@ public class AromaOntologyMatcher {
 
     public List<Alignment> align(Collection<String> ontologies) {
         final OntModel mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        String mergedOntology;
+        try {
+            mergedOntology = new String(Files.readAllBytes(Paths.get("alignator-merged-ontology.owl")));
+            StringReader sr = new StringReader(mergedOntology);
+            mergedModel.read(sr, null, "RDF/XML");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         List<String> ontologyFiles = new ArrayList<>();
-
         for (String ontology : ontologies) {
             String ontologyFilename = "tempOntologies/" + UUID.randomUUID().toString();
             ontologyFiles.add(ontologyFilename);
-
             StringReader sr = new StringReader(ontology);
             final OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
             model.read(sr, null, "N3");
 
             try (FileWriter out = new FileWriter(ontologyFilename)) {
-                model.write(out, "RDF/XML");
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            mergedModel.add(model);
-
-            try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
                 model.write(out, "RDF/XML");
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -107,8 +109,25 @@ public class AromaOntologyMatcher {
         catch (AlignmentException e) {
             e.printStackTrace();
         }
+        
+        deleteTempFile(pathToOntology1);
+        deleteTempFile(pathToOntology2);
 
         return alignments;
+    }
+
+    private void deleteTempFile(String pathToOntology1) {
+        try {
+            Files.delete(Paths.get(pathToOntology1));
+        } catch (NoSuchFileException x) {
+            System.err.format("%s: no such" + " file or directory%n", pathToOntology1);
+        } catch (DirectoryNotEmptyException x) {
+            System.err.format("%s not empty%n", pathToOntology1);
+        } catch (IOException x) {
+            // File permission problems are caught here.
+            System.err.println(x);
+        }
+        
     }
 
 }

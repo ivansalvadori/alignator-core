@@ -1,11 +1,20 @@
 package br.ufsc.inf.lapesd.alignator.core;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.ModelFactory;
 
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.EntityLoader;
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.ServiceDescription;
@@ -32,6 +41,34 @@ public class Alignator {
         }
         serviceDescriptions.add(semanticMicroserviceDescription);
         mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
+
+        updateMergedOntology(ontology);
+    }
+
+    private void updateMergedOntology(String ontology) {
+        
+        OntModel currentModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        StringReader sr2 = new StringReader(ontology);
+        currentModel.read(sr2, null, "RDF/XML");
+        
+        OntModel mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        try {
+            String mergedOntology = new String(Files.readAllBytes(Paths.get("alignator-merged-ontology.owl")));
+            StringReader sr = new StringReader(mergedOntology);
+            mergedModel.read(sr, null, "RDF/XML");
+            mergedModel.add(currentModel);
+            try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
+                mergedModel.write(out, "RDF/XML");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        } catch (IOException e) {
+            try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
+                currentModel.write(out, "RDF/XML");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public void loadEntitiesAndAlignOntologies(String exampleOfEntity) {
