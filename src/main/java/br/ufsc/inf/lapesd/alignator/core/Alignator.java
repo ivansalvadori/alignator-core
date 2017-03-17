@@ -18,6 +18,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.EntityLoader;
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.ServiceDescription;
+import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyAlreadyRegisteredException;
 import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyManager;
 import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.AromaOntologyMatcher;
 
@@ -33,16 +34,21 @@ public class Alignator {
     }
 
     public void registerService(ServiceDescription semanticMicroserviceDescription, String ontology) {
-        String baseNamespace = ontologyManager.registerOntology(ontology);
-
-        List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
-        if (serviceDescriptions == null) {
-            serviceDescriptions = new ArrayList<>();
+        try {
+        	String baseNamespace = ontologyManager.registerOntology(ontology);
+        
+	
+	        List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
+	        if (serviceDescriptions == null) {
+	            serviceDescriptions = new ArrayList<>();
+	        }
+	        serviceDescriptions.add(semanticMicroserviceDescription);
+	        mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
+	
+	        updateMergedOntology(ontology);
         }
-        serviceDescriptions.add(semanticMicroserviceDescription);
-        mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
-
-        updateMergedOntology(ontology);
+        catch (OntologyAlreadyRegisteredException e) {
+		}
     }
 
     private void updateMergedOntology(String ontology) {
@@ -72,6 +78,10 @@ public class Alignator {
     }
 
     public void loadEntitiesAndAlignOntologies(String exampleOfEntity) {
+    	
+    	if(this.ontologyManager.getAllOntologiesWithEntities().size() == 1) {
+    		return;
+    	}
         Set<String> ontologyBaseNamespaces = mapOntologyBaseNamespaceServiceDesciptions.keySet();
         for (String baseNamespace : ontologyBaseNamespaces) {
             List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
