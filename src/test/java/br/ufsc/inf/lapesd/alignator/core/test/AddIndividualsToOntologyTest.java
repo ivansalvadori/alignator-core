@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,30 +45,6 @@ public class AddIndividualsToOntologyTest {
         serviceDescription3.setServerPort("8083");
         serviceDescription3.setIpAddress("10.1.1.1");
         alignator.registerService(serviceDescription3, ontology3);
-
-    }
-
-    @Test
-    public void mustAddAnIndividualToOntologyTypeDefined() throws IOException {
-        TestableEntityLoader entityLoader = new TestableEntityLoader();
-        alignator.setEntityLoader(entityLoader);
-        String entity2 = IOUtils.toString(this.getClass().getResourceAsStream("/entityLoader/entity2.jsonld"), "UTF-8");
-        alignator.loadEntitiesAndAlignOntologies(entity2);
-
-        String expectedOnotology1String = IOUtils.toString(this.getClass().getResourceAsStream("/entityLoader/expectedEntityOntology1.owl"), "UTF-8");
-        String expectedOnotology2String = IOUtils.toString(this.getClass().getResourceAsStream("/entityLoader/expectedEntity1Ontology2.owl"), "UTF-8");
-        String expectedOnotology22String = IOUtils.toString(this.getClass().getResourceAsStream("/entityLoader/expectedEntity2Ontology2.owl"), "UTF-8");
-
-        String ontology1WithIndividuals = alignator.getOntologyManager().getStringOntologyWithIndividuals("http://ontology1#");
-        String ontology2WithIndividuals = alignator.getOntologyManager().getStringOntologyWithIndividuals("http://ontology2#");
-
-        boolean ontology1EqualExpected = ontology1WithIndividuals.trim().contains(expectedOnotology1String.trim());
-        boolean ontology2EqualExpected = ontology2WithIndividuals.trim().contains(expectedOnotology2String.trim());
-        boolean ontology22EqualExpected = ontology2WithIndividuals.trim().contains(expectedOnotology22String.trim());
-
-        Assert.assertTrue(ontology1EqualExpected);
-        Assert.assertTrue(ontology2EqualExpected);
-        Assert.assertTrue(ontology22EqualExpected);
 
     }
 

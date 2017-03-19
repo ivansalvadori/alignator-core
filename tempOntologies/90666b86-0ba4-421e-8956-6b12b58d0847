@@ -1,0 +1,73 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns="http://ontology2#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#" > 
+  <rdf:Description rdf:about="http://ontology2#Entity1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property2">
+    <rdfs:range rdf:resource="http://ontology2#Entity2"/>
+    <rdfs:domain rdf:resource="http://ontology2#Entity1"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property3">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property4">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#property5">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A0">
+    <property4>value4</property4>
+    <property3>value3</property3>
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#Entity2">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://ontology2#">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A1">
+    <property2 rdf:nodeID="A0"/>
+    <property1>value1</property1>
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A2">
+    <property2 rdf:nodeID="A3"/>
+    <property1>value1</property1>
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A3">
+    <property4>value4</property4>
+    <property3>value3</property3>
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A4">
+    <property2 rdf:nodeID="A5"/>
+    <property1>value1</property1>
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A5">
+    <property4>value4</property4>
+    <property3>value3</property3>
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A6">
+    <property4>value4</property4>
+    <property3>value3</property3>
+    <rdf:type rdf:resource="http://ontology2#Entity2"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A7">
+    <property2 rdf:nodeID="A6"/>
+    <property1>value1</property1>
+    <rdf:type rdf:resource="http://ontology2#Entity1"/>
+  </rdf:Description>
+</rdf:RDF>

@@ -93,6 +93,9 @@ public class OntologyManager {
             String individualType = jsonObject.get("@type").getAsString();
 
             OntModel ontModel = getOntology(individualType);
+            if (ontModel == null) {
+                return null;
+            }
             OntClass classOfIndividual = ontModel.getOntClass(individualType);
             individual = classOfIndividual.createIndividual();
 

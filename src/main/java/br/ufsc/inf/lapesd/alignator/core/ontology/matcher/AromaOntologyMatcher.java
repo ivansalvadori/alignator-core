@@ -5,12 +5,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -41,6 +42,12 @@ public class AromaOntologyMatcher {
         }
 
         List<String> ontologyFiles = new ArrayList<>();
+
+        File directory = new File(String.valueOf("tempOntologies"));
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
         for (String ontology : ontologies) {
             String ontologyFilename = "tempOntologies/" + UUID.randomUUID().toString();
             ontologyFiles.add(ontologyFilename);
@@ -70,6 +77,8 @@ public class AromaOntologyMatcher {
                 mergedModel.getOntProperty(alignment.getUri2()).addEquivalentProperty(mergedModel.getOntProperty(alignment.getUri1()));
             }
         }
+
+        deleteTempFile();
 
         try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
             mergedModel.write(out, "RDF/XML");
@@ -109,25 +118,19 @@ public class AromaOntologyMatcher {
         catch (AlignmentException e) {
             e.printStackTrace();
         }
-        
-        deleteTempFile(pathToOntology1);
-        deleteTempFile(pathToOntology2);
 
         return alignments;
     }
 
-    private void deleteTempFile(String pathToOntology1) {
+    private void deleteTempFile() {
+        Path rootPath = Paths.get("tempOntologies");
         try {
-            Files.delete(Paths.get(pathToOntology1));
-        } catch (NoSuchFileException x) {
-            System.err.format("%s: no such" + " file or directory%n", pathToOntology1);
-        } catch (DirectoryNotEmptyException x) {
-            System.err.format("%s not empty%n", pathToOntology1);
-        } catch (IOException x) {
-            // File permission problems are caught here.
-            System.err.println(x);
+            Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-        
+
     }
 
 }
