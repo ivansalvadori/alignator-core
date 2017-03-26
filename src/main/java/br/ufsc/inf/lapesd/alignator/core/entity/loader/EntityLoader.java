@@ -97,7 +97,8 @@ public class EntityLoader {
             WebTarget webTarget = client.target(link).queryParam("linkedatorOptions", "linkVerify");
             Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
             try {
-                System.out.println(String.format("loading entity from: %s", link));
+                // System.out.println(String.format("loading entity from: %s",
+                // link));
                 Response response = invocationBuilder.get();
 
                 int status = response.getStatus();

@@ -31,6 +31,8 @@ import fr.inrialpes.exmo.aroma.AROMA;
 public class AromaOntologyMatcher {
 
     public List<Alignment> align(Collection<String> ontologies) {
+        List<Alignment> allAlignments = new ArrayList<>();
+
         final OntModel mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
         String mergedOntology;
         try {
@@ -71,8 +73,9 @@ public class AromaOntologyMatcher {
             String ontologyFile0 = aCombination.get(0);
             String ontologyFile1 = aCombination.get(1);
             List<Alignment> alignments = align(ontologyFile0, ontologyFile1);
+            allAlignments.addAll(alignments);
             for (Alignment alignment : alignments) {
-                System.out.println(alignment);
+                // System.out.println(alignment);
                 mergedModel.getOntProperty(alignment.getUri1()).addEquivalentProperty(mergedModel.getOntProperty(alignment.getUri2()));
                 mergedModel.getOntProperty(alignment.getUri2()).addEquivalentProperty(mergedModel.getOntProperty(alignment.getUri1()));
             }
@@ -86,7 +89,7 @@ public class AromaOntologyMatcher {
             ex.printStackTrace();
         }
 
-        return null;
+        return allAlignments;
     }
 
     public List<Alignment> align(String pathToOntology1, String pathToOntology2) {
