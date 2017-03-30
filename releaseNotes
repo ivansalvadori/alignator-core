@@ -1,5 +1,6 @@
 0.0.2-SNAPSHOT
 =====
+Number of individuals in each ontology is now limited to 2000.
 Report for collection data about entity loader and ontology manager.
 EntityLoader and OntologyManager created.
 

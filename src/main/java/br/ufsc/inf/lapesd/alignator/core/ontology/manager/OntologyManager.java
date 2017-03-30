@@ -96,6 +96,16 @@ public class OntologyManager {
             if (ontModel == null) {
                 return null;
             }
+            
+            int numberOfIndividuals = ontModel.listIndividuals().toList().size();
+            if(numberOfIndividuals > 2000){
+                String baseName = ontModel.getNsPrefixURI("");
+                OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
+                ontModel.removeAll();
+                ontModel.add(ontModelWithoutIndividuals);
+            }
+            
+            
             OntClass classOfIndividual = ontModel.getOntClass(individualType);
             individual = classOfIndividual.createIndividual();
 
