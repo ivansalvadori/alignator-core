@@ -5,6 +5,7 @@ public class OntologyManagerReport {
     private String ontologyBaseUri;
     private int numberOfIndividuals;
     private int numberOfCharsOntologyModel;
+    private long matcherElapsedTime;
 
     public void setExecutionId(int executionId) {
         this.executionId = executionId;
@@ -36,6 +37,14 @@ public class OntologyManagerReport {
 
     public void setNumberOfCharsOntologyModel(int numberOfCharsOntologyModel) {
         this.numberOfCharsOntologyModel = numberOfCharsOntologyModel;
+    }
+
+    public double getMatcherElapsedTime() {
+        return matcherElapsedTime;
+    }
+
+    public void setMatcherElapsedTime(long matcherElapsedTime) {
+        this.matcherElapsedTime = matcherElapsedTime;
     }
 
 }

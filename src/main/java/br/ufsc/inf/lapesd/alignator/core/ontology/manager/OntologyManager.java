@@ -98,7 +98,7 @@ public class OntologyManager {
             }
             
             int numberOfIndividuals = ontModel.listIndividuals().toList().size();
-            if(numberOfIndividuals > 2000){
+            if(numberOfIndividuals > 500){
                 String baseName = ontModel.getNsPrefixURI("");
                 OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
                 ontModel.removeAll();

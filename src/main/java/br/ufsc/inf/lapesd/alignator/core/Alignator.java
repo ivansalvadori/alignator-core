@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,14 +102,19 @@ public class Alignator {
         }
 
         Collection<String> allOntologiesWithEntities = ontologyManager.getAllStringOntologiesWithEntities();
+
+        Date start = new Date();
         List<Alignment> alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
+        Date finish = new Date();
+
+        long matcherTime = finish.getTime() - start.getTime();
 
         this.executionCount++;
         createEntityLoaderReport(totalLoadedEntities, alignments);
-        crateOntologyManagerReport();
+        crateOntologyManagerReport(matcherTime);
     }
 
-    private void crateOntologyManagerReport() {
+    private void crateOntologyManagerReport(long matcherTime) {
 
         Collection<OntModel> allOntologiesWithEntities = this.ontologyManager.getAllOntologiesWithEntities();
         for (OntModel ontModel : allOntologiesWithEntities) {
@@ -121,6 +127,7 @@ public class Alignator {
             ontologyManagerReport.setNumberOfCharsOntologyModel(chars);
             ontologyManagerReport.setNumberOfIndividuals(numberOfindividuals);
             ontologyManagerReport.setOntologyBaseUri(ontologyBaseUri);
+            ontologyManagerReport.setMatcherElapsedTime(matcherTime);
             this.ontologyManagerReportList.add(ontologyManagerReport);
         }
     }
