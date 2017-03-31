@@ -11,6 +11,7 @@ public class EntityLoaderReport {
     private int numberOfLoadedEntities;
     private int numberOfCharsLoadedEntities;
     private List<Alignment> alignments = new ArrayList<>();
+    private long matcherElapsedTime;
 
     public int getExecutionId() {
         return executionId;
@@ -48,6 +49,14 @@ public class EntityLoaderReport {
     public String toString() {
         return "Report [executionId=" + executionId + ", numberOfLoadedEntities=" + numberOfLoadedEntities + ", numberOfCharsLoadedEntities=" + numberOfCharsLoadedEntities + ", alignments="
                 + alignments + "]";
+    }
+
+    public long getMatcherElapsedTime() {
+        return matcherElapsedTime;
+    }
+
+    public void setMatcherElapsedTime(long matcherElapsedTime) {
+        this.matcherElapsedTime = matcherElapsedTime;
     }
 
 }

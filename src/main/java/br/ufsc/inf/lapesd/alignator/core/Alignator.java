@@ -110,12 +110,11 @@ public class Alignator {
         long matcherTime = finish.getTime() - start.getTime();
 
         this.executionCount++;
-        createEntityLoaderReport(totalLoadedEntities, alignments);
-        crateOntologyManagerReport(matcherTime);
+        createEntityLoaderReport(totalLoadedEntities, alignments, matcherTime);
+        crateOntologyManagerReport();
     }
 
-    private void crateOntologyManagerReport(long matcherTime) {
-
+    private void crateOntologyManagerReport() {
         Collection<OntModel> allOntologiesWithEntities = this.ontologyManager.getAllOntologiesWithEntities();
         for (OntModel ontModel : allOntologiesWithEntities) {
             String ontologyBaseUri = ontModel.getNsPrefixURI("");
@@ -127,12 +126,11 @@ public class Alignator {
             ontologyManagerReport.setNumberOfCharsOntologyModel(chars);
             ontologyManagerReport.setNumberOfIndividuals(numberOfindividuals);
             ontologyManagerReport.setOntologyBaseUri(ontologyBaseUri);
-            ontologyManagerReport.setMatcherElapsedTime(matcherTime);
             this.ontologyManagerReportList.add(ontologyManagerReport);
         }
     }
 
-    private void createEntityLoaderReport(List<String> loadedEntities, List<Alignment> alignments) {
+    private void createEntityLoaderReport(List<String> loadedEntities, List<Alignment> alignments, long matcherTime) {
         EntityLoaderReport report = new EntityLoaderReport();
         report.setExecutionId(this.executionCount);
 
@@ -145,6 +143,7 @@ public class Alignator {
 
         report.setNumberOfCharsLoadedEntities(totalChars);
         report.setAlignments(alignments);
+        report.setMatcherElapsedTime(matcherTime);
 
         this.entityLoaderReportList.add(report);
 
