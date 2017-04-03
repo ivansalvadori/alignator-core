@@ -13,8 +13,8 @@ public class Permutations<T> {
         Permutations<String> obj = new Permutations<>();
 
         // Limit to permutations
-        while (input.size() >= 8) {
-            int inputIndexToRemove = new Random().nextInt(5);
+        while (input.size() >= 4) {
+            int inputIndexToRemove = new Random().nextInt(4);
             List<String> listInput = new ArrayList<>(input);
             listInput.remove(inputIndexToRemove);
             input.clear();

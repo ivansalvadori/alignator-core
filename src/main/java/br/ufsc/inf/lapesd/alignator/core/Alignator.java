@@ -16,24 +16,34 @@ import java.util.Set;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.EntityLoader;
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.ServiceDescription;
-import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyAlreadyRegisteredException;
 import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyManager;
 import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.AromaOntologyMatcher;
 import br.ufsc.inf.lapesd.alignator.core.report.EntityLoaderReport;
 import br.ufsc.inf.lapesd.alignator.core.report.OntologyManagerReport;
 
+@Component
+@Scope("prototype")
 public class Alignator {
 
     private int executionCount = 0;
     private List<EntityLoaderReport> entityLoaderReportList = new ArrayList<>();
     private List<OntologyManagerReport> ontologyManagerReportList = new ArrayList<>();
 
+    @Autowired
     private AromaOntologyMatcher aromaOntologyMatcher = new AromaOntologyMatcher();
+
+    @Autowired
     private OntologyManager ontologyManager = new OntologyManager();
+
+    @Autowired
     private EntityLoader entityLoader = new EntityLoader();
+
     private Map<String, List<ServiceDescription>> mapOntologyBaseNamespaceServiceDesciptions = new HashMap<>();
 
     public void setEntityLoader(EntityLoader entityLoader) {
@@ -41,19 +51,16 @@ public class Alignator {
     }
 
     public void registerService(ServiceDescription semanticMicroserviceDescription, String ontology) {
-        try {
-            String baseNamespace = ontologyManager.registerOntology(ontology);
+        String baseNamespace = ontologyManager.registerOntology(ontology);
 
-            List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
-            if (serviceDescriptions == null) {
-                serviceDescriptions = new ArrayList<>();
-            }
-            serviceDescriptions.add(semanticMicroserviceDescription);
-            mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
-
-            updateMergedOntology(ontology);
-        } catch (OntologyAlreadyRegisteredException e) {
+        List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
+        if (serviceDescriptions == null) {
+            serviceDescriptions = new ArrayList<>();
         }
+        serviceDescriptions.add(semanticMicroserviceDescription);
+        mapOntologyBaseNamespaceServiceDesciptions.put(baseNamespace, serviceDescriptions);
+
+        updateMergedOntology(ontology);
     }
 
     private void updateMergedOntology(String ontology) {
@@ -70,12 +77,14 @@ public class Alignator {
             mergedModel.add(currentModel);
             try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
                 mergedModel.write(out, "RDF/XML");
+                mergedModel.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         } catch (IOException e) {
             try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
                 currentModel.write(out, "RDF/XML");
+                currentModel.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -94,20 +103,25 @@ public class Alignator {
         for (String baseNamespace : ontologyBaseNamespaces) {
             List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
             for (ServiceDescription semanticMicroserviceDescription : serviceDescriptions) {
-                List<String> loadedEntities = entityLoader.loadEntitiesFromServices(exampleOfEntity, semanticMicroserviceDescription);
+                List<String> loadedEntities = new ArrayList<>();
+                loadedEntities = entityLoader.loadEntitiesFromServices(exampleOfEntity, semanticMicroserviceDescription);
                 loadedEntities.add(exampleOfEntity);
                 ontologyManager.addEntitiesToOntology(loadedEntities);
                 totalLoadedEntities.addAll(loadedEntities);
             }
         }
 
-        Collection<String> allOntologiesWithEntities = ontologyManager.getAllStringOntologiesWithEntities();
+        Collection<OntModel> allOntologiesWithEntities = ontologyManager.getAllOntologiesWithEntities();
 
+        List<Alignment> alignments = null;
+        long matcherTime = 0;
+
+        // if (this.executionCount % 10 == 0) {
         Date start = new Date();
-        List<Alignment> alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
+        alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
         Date finish = new Date();
-
-        long matcherTime = finish.getTime() - start.getTime();
+        matcherTime = finish.getTime() - start.getTime();
+        // }
 
         this.executionCount++;
         createEntityLoaderReport(totalLoadedEntities, alignments, matcherTime);

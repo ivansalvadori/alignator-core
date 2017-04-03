@@ -15,22 +15,22 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.semanticweb.owl.align.AlignmentException;
 import org.semanticweb.owl.align.Cell;
-
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.springframework.stereotype.Component;
 
 import br.ufsc.inf.lapesd.alignator.core.Alignment;
 import fr.inrialpes.exmo.align.impl.ObjectAlignment;
 import fr.inrialpes.exmo.aroma.AROMA;
 
+@Component
 public class AromaOntologyMatcher {
 
-    public List<Alignment> align(Collection<String> ontologies) {
+    public List<Alignment> align(Collection<OntModel> ontologies) {
         List<Alignment> allAlignments = new ArrayList<>();
 
         final OntModel mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
@@ -39,6 +39,7 @@ public class AromaOntologyMatcher {
             mergedOntology = new String(Files.readAllBytes(Paths.get("alignator-merged-ontology.owl")));
             StringReader sr = new StringReader(mergedOntology);
             mergedModel.read(sr, null, "RDF/XML");
+            sr.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,25 +51,44 @@ public class AromaOntologyMatcher {
             directory.mkdir();
         }
 
-        for (String ontology : ontologies) {
-            String ontologyFilename = "tempOntologies/" + UUID.randomUUID().toString();
+        int x = 0;
+        for (OntModel ontology : ontologies) {
+            // String ontologyFilename = "tempOntologies/" +
+            // UUID.randomUUID().toString();
+            String ontologyFilename = "tempOntologies/" + x++;
+
             ontologyFiles.add(ontologyFilename);
-            StringReader sr = new StringReader(ontology);
-            final OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-            model.read(sr, null, "N3");
 
             try (FileWriter out = new FileWriter(ontologyFilename)) {
-                model.write(out, "RDF/XML");
+                ontology.write(out, "RDF/XML");
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
 
-        Combination combination = new Combination();
         if (ontologies.size() < 2) {
             return null;
         }
-        List<List<String>> combinationOfOntologies = combination.combine(ontologyFiles, 2);
+
+        // List<List<String>> combinationOfOntologies =
+        // combination.combine(ontologyFiles, 2);
+        List<List<String>> combinationOfOntologies = new ArrayList<>();
+        List<String> a = new ArrayList<>();
+        a.add("tempOntologies/0");
+        a.add("tempOntologies/1");
+
+        List<String> b = new ArrayList<>();
+        b.add("tempOntologies/0");
+        b.add("tempOntologies/2");
+
+        List<String> c = new ArrayList<>();
+        c.add("tempOntologies/1");
+        c.add("tempOntologies/2");
+
+        combinationOfOntologies.add(a);
+        combinationOfOntologies.add(b);
+        combinationOfOntologies.add(c);
+
         for (List<String> aCombination : combinationOfOntologies) {
             String ontologyFile0 = aCombination.get(0);
             String ontologyFile1 = aCombination.get(1);
@@ -88,6 +108,7 @@ public class AromaOntologyMatcher {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        mergedModel.close();
 
         return allAlignments;
     }
@@ -98,7 +119,7 @@ public class AromaOntologyMatcher {
 
         try {
             Properties p = new Properties();
-            p.setProperty("lexicalSim", "true");
+            // p.setProperty("lexicalSim", "true");
 
             AROMA align = new AROMA();
             align.skos = "true".equals(p.getProperty("skos"));

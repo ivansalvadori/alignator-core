@@ -19,12 +19,13 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.shared.JenaException;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+@Component
 public class OntologyManager {
 
     private Map<String, OntModel> mapPrefixOriginalOntology = new HashMap<>();
@@ -39,7 +40,8 @@ public class OntologyManager {
         String baseNamespace = getBaseNamespace(ontology);
 
         if (mapPrefixOriginalOntology.containsKey(baseNamespace)) {
-            throw new OntologyAlreadyRegisteredException();
+            return baseNamespace;
+            // throw new OntologyAlreadyRegisteredException();
         }
 
         mapPrefixOriginalOntology.put(baseNamespace, loadOntology(ontology));
@@ -50,15 +52,10 @@ public class OntologyManager {
 
     private OntModel loadOntology(String ontology) {
         OntModel ontoModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
-        try {
-            InputStream in = new ByteArrayInputStream(ontology.getBytes(StandardCharsets.UTF_8));
 
-            try {
-                ontoModel.read(in, null);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } catch (JenaException je) {
+        try (InputStream in = new ByteArrayInputStream(ontology.getBytes(StandardCharsets.UTF_8));) {
+            ontoModel.read(in, null);
+        } catch (Exception je) {
             System.err.println("ERROR" + je.getMessage());
             je.printStackTrace();
         }
@@ -96,16 +93,15 @@ public class OntologyManager {
             if (ontModel == null) {
                 return null;
             }
-            
+
             int numberOfIndividuals = ontModel.listIndividuals().toList().size();
-            if(numberOfIndividuals > 500){
+            if (numberOfIndividuals > 100) {
                 String baseName = ontModel.getNsPrefixURI("");
                 OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
                 ontModel.removeAll();
                 ontModel.add(ontModelWithoutIndividuals);
             }
-            
-            
+
             OntClass classOfIndividual = ontModel.getOntClass(individualType);
             individual = classOfIndividual.createIndividual();
 
@@ -183,6 +179,7 @@ public class OntologyManager {
         } catch (IOException e1) {
             e1.printStackTrace();
         }
+        ontModel.close();
         return null;
 
     }

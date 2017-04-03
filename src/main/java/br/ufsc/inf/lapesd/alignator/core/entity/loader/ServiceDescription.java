@@ -6,8 +6,6 @@ import java.util.List;
 
 import javax.ws.rs.core.UriBuilder;
 
-import com.google.gson.Gson;
-
 public class ServiceDescription {
 
     private String ipAddress;
@@ -30,10 +28,6 @@ public class ServiceDescription {
     }
 
     public List<SemanticResource> getSemanticResources() {
-        /* Workarround */
-        for (SemanticResource semanticResource : semanticResources) {
-            semanticResource.setSemanticMicroserviceDescription(this);
-        }
         return semanticResources;
     }
 
@@ -55,10 +49,5 @@ public class ServiceDescription {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
-    }
-
-    @Override
-    public String toString() {
-        return new Gson().toJson(this);
     }
 }

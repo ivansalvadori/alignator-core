@@ -17,25 +17,26 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.springframework.stereotype.Component;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+@Component
 public class EntityLoader {
 
     public List<String> loadEntitiesFromServices(String exampleOfEntity, ServiceDescription semanticMicroserviceDescription) {
-
         List<String> extractedValues = new ArrayList<>(extractValues(exampleOfEntity));
-
-        List<SemanticResource> semanticResources = semanticMicroserviceDescription.getSemanticResources();
-        List<String> linksToVisit = createLinks(extractedValues, semanticResources);
+        List<String> linksToVisit = createLinks(extractedValues, semanticMicroserviceDescription);
         List<String> loadedEntities = visitLinksAndGetEntities(linksToVisit);
         return loadedEntities;
     }
 
-    protected List<String> createLinks(List<String> extractedValues, List<SemanticResource> semanticResources) {
+    protected List<String> createLinks(List<String> extractedValues, ServiceDescription semanticMicroserviceDescription) {
         List<String> listOfLinksToVisit = new ArrayList<>();
-        for (SemanticResource semanticResource : semanticResources) {
+
+        for (SemanticResource semanticResource : semanticMicroserviceDescription.getSemanticResources()) {
             List<UriTemplate> uriTemplates = semanticResource.getUriTemplates();
             for (UriTemplate uriTemplate : uriTemplates) {
 
@@ -55,7 +56,7 @@ public class EntityLoader {
                         resolvedParameters.put(propertyKey.get(i), aPermutation.get(i));
                     }
 
-                    UriBuilder builder = UriBuilder.fromPath(semanticResource.getSemanticMicroserviceDescription().getMicroserviceFullPath()).path(uriTemplate.getUri());
+                    UriBuilder builder = UriBuilder.fromPath(semanticMicroserviceDescription.getMicroserviceFullPath()).path(uriTemplate.getUri());
                     builder.resolveTemplates(resolvedParameters);
                     URI uri = builder.build();
                     String link = uri.toASCIIString();
@@ -97,8 +98,6 @@ public class EntityLoader {
             WebTarget webTarget = client.target(link).queryParam("linkedatorOptions", "linkVerify");
             Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
             try {
-                // System.out.println(String.format("loading entity from: %s",
-                // link));
                 Response response = invocationBuilder.get();
 
                 int status = response.getStatus();
