@@ -92,6 +92,7 @@ public class Alignator {
     }
 
     public void loadEntitiesAndAlignOntologies(String exampleOfEntity) {
+        Date alignatorStart = new Date();
 
         if (this.ontologyManager.getAllOntologiesWithEntities().size() == 1) {
             return;
@@ -116,15 +117,17 @@ public class Alignator {
         List<Alignment> alignments = null;
         long matcherTime = 0;
 
-        // if (this.executionCount % 10 == 0) {
-        Date start = new Date();
+        Date start = alignatorStart;
         alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
-        Date finish = new Date();
+        Date finish = alignatorStart;
         matcherTime = finish.getTime() - start.getTime();
-        // }
 
+        Date alignatorFinish = new Date();
+        
+        long alignatorTime = alignatorFinish.getTime() - alignatorStart.getTime();
+        
         this.executionCount++;
-        createEntityLoaderReport(totalLoadedEntities, alignments, matcherTime);
+        createEntityLoaderReport(totalLoadedEntities, alignments, matcherTime, alignatorTime);
         crateOntologyManagerReport();
     }
 
@@ -144,7 +147,7 @@ public class Alignator {
         }
     }
 
-    private void createEntityLoaderReport(List<String> loadedEntities, List<Alignment> alignments, long matcherTime) {
+    private EntityLoaderReport createEntityLoaderReport(List<String> loadedEntities, List<Alignment> alignments, long matcherTime, long alignatorTime) {
         EntityLoaderReport report = new EntityLoaderReport();
         report.setExecutionId(this.executionCount);
 
@@ -160,6 +163,7 @@ public class Alignator {
         report.setMatcherElapsedTime(matcherTime);
 
         this.entityLoaderReportList.add(report);
+        return report;
 
     }
 

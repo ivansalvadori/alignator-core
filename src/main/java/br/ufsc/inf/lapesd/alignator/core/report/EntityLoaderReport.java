@@ -12,6 +12,8 @@ public class EntityLoaderReport {
     private int numberOfCharsLoadedEntities;
     private List<Alignment> alignments = new ArrayList<>();
     private long matcherElapsedTime;
+    private long alignatorElapsedTime;
+
 
     public int getExecutionId() {
         return executionId;
@@ -57,6 +59,14 @@ public class EntityLoaderReport {
 
     public void setMatcherElapsedTime(long matcherElapsedTime) {
         this.matcherElapsedTime = matcherElapsedTime;
+    }
+
+    public long getAlignatorElapsedTime() {
+        return alignatorElapsedTime;
+    }
+
+    public void setAlignatorElapsedTime(long alignatorElapsedTime) {
+        this.alignatorElapsedTime = alignatorElapsedTime;
     }
 
 }
