@@ -19,6 +19,7 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonElement;
@@ -30,6 +31,7 @@ public class OntologyManager {
 
     private Map<String, OntModel> mapPrefixOriginalOntology = new HashMap<>();
     private Map<String, OntModel> mapPrefixOntologyWithIndividuals = new HashMap<>();
+    private int ontologyMaxIndividuals = 1000;
 
     /**
      * @param ontology
@@ -72,58 +74,68 @@ public class OntologyManager {
     private Individual createAndAddIndividual(String entity) {
         Individual individual = null;
 
-        JsonElement parsedEntity = new JsonParser().parse(entity);
-        if (parsedEntity.isJsonObject()) {
-            JsonObject jsonObject = parsedEntity.getAsJsonObject();
-            Set<Entry<String, JsonElement>> propertiesAndValues = jsonObject.entrySet();
-            boolean hasType = false;
-            for (Entry<String, JsonElement> entry : propertiesAndValues) {
-                if (entry.getKey().equals("@type")) {
-                    hasType = true;
-                }
-            }
-            if (!hasType) {
-                // TODO take a look at the ontology to check if this property
-                // has range. Range can be used as @type
-                return null;
-            }
-            String individualType = jsonObject.get("@type").getAsString();
-
-            OntModel ontModel = getOntology(individualType);
-            if (ontModel == null) {
-                return null;
-            }
-
-            int numberOfIndividuals = ontModel.listIndividuals().toList().size();
-            if (numberOfIndividuals > 100) {
-                String baseName = ontModel.getNsPrefixURI("");
-                OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
-                ontModel.removeAll();
-                ontModel.add(ontModelWithoutIndividuals);
-            }
-
-            OntClass classOfIndividual = ontModel.getOntClass(individualType);
-            individual = classOfIndividual.createIndividual();
-
-            for (Entry<String, JsonElement> entityPropertyAndValue : propertiesAndValues) {
-                String propertyKey = entityPropertyAndValue.getKey();
-                if (propertyKey.equals("@id") || propertyKey.equals("@type")) {
-                    continue;
-                }
-                JsonElement value = entityPropertyAndValue.getValue();
-                if (value.isJsonObject()) {
-                    Individual innerIndividual = createAndAddIndividual(value.toString());
-                    if (innerIndividual != null) {
-                        individual.addProperty(ontModel.getProperty(propertyKey), innerIndividual);
+        try {
+            JsonElement parsedEntity = new JsonParser().parse(entity);
+            if (parsedEntity.isJsonObject()) {
+                JsonObject jsonObject = parsedEntity.getAsJsonObject();
+                Set<Entry<String, JsonElement>> propertiesAndValues = jsonObject.entrySet();
+                boolean hasType = false;
+                for (Entry<String, JsonElement> entry : propertiesAndValues) {
+                    if (entry.getKey().equals("@type")) {
+                        hasType = true;
                     }
                 }
+                if (!hasType) {
+                    // TODO take a look at the ontology to check if this
+                    // property
+                    // has range. Range can be used as @type
+                    return null;
+                }
+                String individualType = jsonObject.get("@type").getAsString();
 
-                if (value.isJsonPrimitive()) {
-                    String propertyValue = value.getAsString();
-                    propertyValue = StringEscapeUtils.escapeXml11(propertyValue);
-                    individual.addProperty(ontModel.getProperty(propertyKey), propertyValue);
+                OntModel ontModel = getOntology(individualType);
+                if (ontModel == null) {
+                    return null;
+                }
+
+                // Ontology size control
+                int numberOfIndividuals = 0;
+                ExtendedIterator<Individual> listIndividuals = ontModel.listIndividuals();
+                if (listIndividuals != null) {
+                    numberOfIndividuals = listIndividuals.toList().size();
+                }
+                if (numberOfIndividuals > this.ontologyMaxIndividuals) {
+                    String baseName = ontModel.getNsPrefixURI("");
+                    OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
+                    ontModel.removeAll();
+                    ontModel.add(ontModelWithoutIndividuals);
+                }
+
+                OntClass classOfIndividual = ontModel.getOntClass(individualType);
+                individual = classOfIndividual.createIndividual();
+
+                for (Entry<String, JsonElement> entityPropertyAndValue : propertiesAndValues) {
+                    String propertyKey = entityPropertyAndValue.getKey();
+                    if (propertyKey.equals("@id") || propertyKey.equals("@type")) {
+                        continue;
+                    }
+                    JsonElement value = entityPropertyAndValue.getValue();
+                    if (value.isJsonObject()) {
+                        Individual innerIndividual = createAndAddIndividual(value.toString());
+                        if (innerIndividual != null) {
+                            individual.addProperty(ontModel.getProperty(propertyKey), innerIndividual);
+                        }
+                    }
+
+                    if (value.isJsonPrimitive()) {
+                        String propertyValue = value.getAsString();
+                        propertyValue = StringEscapeUtils.escapeXml11(propertyValue);
+                        individual.addProperty(ontModel.getProperty(propertyKey), propertyValue);
+                    }
                 }
             }
+        } catch (Exception e) {
+            return null;
         }
         return individual;
     }
@@ -182,6 +194,10 @@ public class OntologyManager {
         ontModel.close();
         return null;
 
+    }
+
+    public void setOntologyMaxIndividuals(int ontologyMaxIndividuals) {
+        this.ontologyMaxIndividuals = ontologyMaxIndividuals;
     }
 
 }

@@ -70,26 +70,24 @@ public class AromaOntologyMatcher {
             return null;
         }
 
-        // List<List<String>> combinationOfOntologies =
-        // combination.combine(ontologyFiles, 2);
-        List<List<String>> combinationOfOntologies = new ArrayList<>();
-        List<String> a = new ArrayList<>();
-        a.add("tempOntologies/0");
-        a.add("tempOntologies/1");
+        Combinations<String> combinations = new Combinations<>(ontologyFiles, 2);
 
-        List<String> b = new ArrayList<>();
-        b.add("tempOntologies/0");
-        b.add("tempOntologies/2");
+        /*
+         * List<List<String>> combinationOfOntologies = new ArrayList<>();
+         * List<String> a = new ArrayList<>(); a.add("tempOntologies/0");
+         * a.add("tempOntologies/1");
+         * 
+         * List<String> b = new ArrayList<>(); b.add("tempOntologies/0");
+         * b.add("tempOntologies/2");
+         * 
+         * List<String> c = new ArrayList<>(); c.add("tempOntologies/1");
+         * c.add("tempOntologies/2");
+         * 
+         * combinationOfOntologies.add(a); combinationOfOntologies.add(b);
+         * combinationOfOntologies.add(c);
+         */
 
-        List<String> c = new ArrayList<>();
-        c.add("tempOntologies/1");
-        c.add("tempOntologies/2");
-
-        combinationOfOntologies.add(a);
-        combinationOfOntologies.add(b);
-        combinationOfOntologies.add(c);
-
-        for (List<String> aCombination : combinationOfOntologies) {
+        for (List<String> aCombination : combinations) {
             String ontologyFile0 = aCombination.get(0);
             String ontologyFile1 = aCombination.get(1);
             List<Alignment> alignments = align(ontologyFile0, ontologyFile1);
