@@ -117,13 +117,12 @@ public class Alignator {
         List<Alignment> alignments = null;
         long matcherTime = 0;
 
-        Date start = alignatorStart;
+        Date matcherStart = new Date();
         alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
-        Date finish = alignatorStart;
-        matcherTime = finish.getTime() - start.getTime();
+        Date matcherFinish = new Date();
+        matcherTime = matcherFinish.getTime() - matcherStart.getTime();
 
-        Date alignatorFinish = new Date();
-        
+        Date alignatorFinish = new Date();        
         long alignatorTime = alignatorFinish.getTime() - alignatorStart.getTime();
         
         this.executionCount++;
@@ -161,6 +160,7 @@ public class Alignator {
         report.setNumberOfCharsLoadedEntities(totalChars);
         report.setAlignments(alignments);
         report.setMatcherElapsedTime(matcherTime);
+        report.setAlignatorElapsedTime(alignatorTime);
 
         this.entityLoaderReportList.add(report);
         return report;
