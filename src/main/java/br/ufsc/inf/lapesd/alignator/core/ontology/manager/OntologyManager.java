@@ -5,13 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.jena.ontology.Individual;
@@ -19,7 +14,13 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonElement;
@@ -28,6 +29,7 @@ import com.google.gson.JsonParser;
 
 @Component
 public class OntologyManager {
+    private static final Logger logger = LoggerFactory.getLogger(OntologyManager.class);
 
     private Map<String, OntModel> mapPrefixOriginalOntology = new HashMap<>();
     private Map<String, OntModel> mapPrefixOntologyWithIndividuals = new HashMap<>();
@@ -153,8 +155,43 @@ public class OntologyManager {
     }
 
     private String getBaseNamespace(String ontology) {
-        OntModel ontoModel = loadOntology(ontology);
-        return ontoModel.getNsPrefixURI("");
+        OntModel model = loadOntology(ontology);
+
+        List<String> nss = new ArrayList<>();
+        /* Alignator assumed xml:base was the ontology identifier. For backward compatibility,
+         * this remains at the top priority. The following code only works when xml:base is
+         * present and is not the last attribute of rdf:RDF in RDF/XML */
+        nss.add(model.getNsPrefixURI(""));
+        /* OWL2 XML does not require a named Ontology individual, neither requires it to be the
+         * only one. It would also bre reasonable to state a object of rdfs:isDefinedBy to be an
+         * owl:Ontology. */
+        nss.add(model.listSubjectsWithProperty(RDF.type, OWL2.Ontology).toList()
+                .stream().filter(Resource::isURIResource).findFirst().map(Resource::getURI)
+                .map(u -> u.endsWith("#") ? u : u + "#")
+                .orElse(null));
+        /* The most frequent namespace among subjects is LIKELY to be the ontology prefix. */
+        nss.add(getMostFrequentSubjectNs(model));
+
+        String selected = nss.stream().filter(Objects::nonNull).findFirst().orElse(null);
+        if (nss.stream().filter(Objects::nonNull).distinct().count() > 1) {
+            logger.warn("Conflicting ontology prefix hints: {} (baseURI) {} (single ow:Ontology) " +
+                    "{} (most frequent subject NS). Selected {} as identifier",
+                    new Object[]{nss.get(0), nss.get(1), nss.get(2), selected});
+        }
+        return selected;
+    }
+
+    private String getMostFrequentSubjectNs(OntModel model) {
+        HashMap<String, Integer> histogram = new HashMap<>();
+        ResIterator it = model.listSubjectsWithProperty(RDF.type);
+        while (it.hasNext()) {
+            Resource r = it.next();
+            if (!r.isURIResource()) continue;
+            String ns = r.getNameSpace();
+            histogram.put(ns, histogram.getOrDefault(ns, 0)+1);
+        }
+        return histogram.entrySet().stream().max(Entry.comparingByValue())
+                .map(Entry::getKey).orElse(null);
     }
 
     public List<String> getAllStringOntologiesWithEntities() {
