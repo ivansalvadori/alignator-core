@@ -131,8 +131,9 @@ public class Alignator {
     }
 
     private void crateOntologyManagerReport() {
-        Collection<OntModel> allOntologiesWithEntities = this.ontologyManager.getAllOntologiesWithEntities();
-        for (OntModel ontModel : allOntologiesWithEntities) {
+        Set<String> namespaces = this.ontologyManager.getRegisteredONtologiesNamespaces();
+        for (String namespace : namespaces) {
+            OntModel ontModel = ontologyManager.getOntologyWithIndividuals(namespace);
             String ontologyBaseUri = ontModel.getNsPrefixURI("");
             int numberOfindividuals = ontModel.listIndividuals().toList().size();
             int chars = ontModel.toString().length();

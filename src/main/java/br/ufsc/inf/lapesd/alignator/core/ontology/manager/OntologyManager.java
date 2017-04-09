@@ -204,6 +204,10 @@ public class OntologyManager {
         return ontologiesWithEntities;
     }
 
+    public Set<String> getRegisteredONtologiesNamespaces() {
+        return this.mapPrefixOntologyWithIndividuals.keySet();
+    }
+
     public Collection<OntModel> getAllOntologiesWithEntities() {
         return this.mapPrefixOntologyWithIndividuals.values();
     }
