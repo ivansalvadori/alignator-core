@@ -134,7 +134,6 @@ public class Alignator {
         Set<String> namespaces = this.ontologyManager.getRegisteredONtologiesNamespaces();
         for (String namespace : namespaces) {
             OntModel ontModel = ontologyManager.getOntologyWithIndividuals(namespace);
-            String ontologyBaseUri = ontModel.getNsPrefixURI("");
             int numberOfindividuals = ontModel.listIndividuals().toList().size();
             int chars = ontModel.toString().length();
 
@@ -142,7 +141,7 @@ public class Alignator {
             ontologyManagerReport.setExecutionId(executionCount);
             ontologyManagerReport.setNumberOfCharsOntologyModel(chars);
             ontologyManagerReport.setNumberOfIndividuals(numberOfindividuals);
-            ontologyManagerReport.setOntologyBaseUri(ontologyBaseUri);
+            ontologyManagerReport.setOntologyBaseUri(namespace);
             this.ontologyManagerReportList.add(ontologyManagerReport);
         }
     }
