@@ -4,9 +4,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.jena.ontology.Individual;
@@ -31,6 +40,7 @@ import com.google.gson.JsonParser;
 public class OntologyManager {
     private static final Logger logger = LoggerFactory.getLogger(OntologyManager.class);
 
+    private Map<String, String> mapAddedIndividuals = new HashMap<>();
     private Map<String, OntModel> mapPrefixOriginalOntology = new HashMap<>();
     private Map<String, OntModel> mapPrefixOntologyWithIndividuals = new HashMap<>();
     private int ontologyMaxIndividuals = 1000;
@@ -75,6 +85,9 @@ public class OntologyManager {
 
     private Individual createAndAddIndividual(String entity) {
         Individual individual = null;
+        if (this.mapAddedIndividuals.get(hashString(entity)) != null) {
+            return null;
+        }
 
         try {
             JsonElement parsedEntity = new JsonParser().parse(entity);
@@ -106,6 +119,7 @@ public class OntologyManager {
                 if (listIndividuals != null) {
                     numberOfIndividuals = listIndividuals.toList().size();
                 }
+
                 if (numberOfIndividuals > this.ontologyMaxIndividuals) {
                     String baseName = ontModel.getNsPrefixURI("");
                     OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
@@ -139,6 +153,7 @@ public class OntologyManager {
         } catch (Exception e) {
             return null;
         }
+        mapAddedIndividuals.put(hashString(entity), entity);
         return individual;
     }
 
@@ -158,25 +173,30 @@ public class OntologyManager {
         OntModel model = loadOntology(ontology);
 
         List<String> nss = new ArrayList<>();
-        /* Alignator assumed xml:base was the ontology identifier. For backward compatibility,
-         * this remains at the top priority. The following code only works when xml:base is
-         * present and is not the last attribute of rdf:RDF in RDF/XML */
+        /*
+         * Alignator assumed xml:base was the ontology identifier. For backward
+         * compatibility, this remains at the top priority. The following code
+         * only works when xml:base is present and is not the last attribute of
+         * rdf:RDF in RDF/XML
+         */
         nss.add(model.getNsPrefixURI(""));
-        /* OWL2 XML does not require a named Ontology individual, neither requires it to be the
-         * only one. It would also bre reasonable to state a object of rdfs:isDefinedBy to be an
-         * owl:Ontology. */
-        nss.add(model.listSubjectsWithProperty(RDF.type, OWL2.Ontology).toList()
-                .stream().filter(Resource::isURIResource).findFirst().map(Resource::getURI)
-                .map(u -> u.endsWith("#") ? u : u + "#")
+        /*
+         * OWL2 XML does not require a named Ontology individual, neither
+         * requires it to be the only one. It would also bre reasonable to state
+         * a object of rdfs:isDefinedBy to be an owl:Ontology.
+         */
+        nss.add(model.listSubjectsWithProperty(RDF.type, OWL2.Ontology).toList().stream().filter(Resource::isURIResource).findFirst().map(Resource::getURI).map(u -> u.endsWith("#") ? u : u + "#")
                 .orElse(null));
-        /* The most frequent namespace among subjects is LIKELY to be the ontology prefix. */
+        /*
+         * The most frequent namespace among subjects is LIKELY to be the
+         * ontology prefix.
+         */
         nss.add(getMostFrequentSubjectNs(model));
 
         String selected = nss.stream().filter(Objects::nonNull).findFirst().orElse(null);
         if (nss.stream().filter(Objects::nonNull).distinct().count() > 1) {
-            logger.warn("Conflicting ontology prefix hints: {} (baseURI) {} (single ow:Ontology) " +
-                    "{} (most frequent subject NS). Selected {} as identifier",
-                    new Object[]{nss.get(0), nss.get(1), nss.get(2), selected});
+            logger.warn("Conflicting ontology prefix hints: {} (baseURI) {} (single ow:Ontology) " + "{} (most frequent subject NS). Selected {} as identifier",
+                    new Object[] { nss.get(0), nss.get(1), nss.get(2), selected });
         }
         return selected;
     }
@@ -186,12 +206,12 @@ public class OntologyManager {
         ResIterator it = model.listSubjectsWithProperty(RDF.type);
         while (it.hasNext()) {
             Resource r = it.next();
-            if (!r.isURIResource()) continue;
+            if (!r.isURIResource())
+                continue;
             String ns = r.getNameSpace();
-            histogram.put(ns, histogram.getOrDefault(ns, 0)+1);
+            histogram.put(ns, histogram.getOrDefault(ns, 0) + 1);
         }
-        return histogram.entrySet().stream().max(Entry.comparingByValue())
-                .map(Entry::getKey).orElse(null);
+        return histogram.entrySet().stream().max(Entry.comparingByValue()).map(Entry::getKey).orElse(null);
     }
 
     public List<String> getAllStringOntologiesWithEntities() {
@@ -239,6 +259,29 @@ public class OntologyManager {
 
     public void setOntologyMaxIndividuals(int ontologyMaxIndividuals) {
         this.ontologyMaxIndividuals = ontologyMaxIndividuals;
+    }
+
+    private String hashString(String message) {
+        MessageDigest digest;
+
+        try {
+            digest = MessageDigest.getInstance("SHA-1");
+            byte[] hashedBytes = digest.digest(message.getBytes("UTF-8"));
+            return convertByteArrayToHexString(hashedBytes);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
+    private String convertByteArrayToHexString(byte[] arrayBytes) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < arrayBytes.length; i++) {
+            stringBuffer.append(Integer.toString((arrayBytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return stringBuffer.toString();
     }
 
 }
