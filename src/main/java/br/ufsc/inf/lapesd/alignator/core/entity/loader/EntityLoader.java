@@ -93,7 +93,9 @@ public class EntityLoader {
         StmtIterator it = model.listStatements();
         while (it.hasNext()) {
             Statement s = it.next();
-            if (s.getObject().isLiteral()) entityValues.add(s.getLiteral().getLexicalForm());
+            if (!s.getObject().isLiteral()) continue;
+            String lexicalForm = s.getLiteral().getLexicalForm();
+            if (!lexicalForm.isEmpty()) entityValues.add(lexicalForm);
         }
         return entityValues;
     }
