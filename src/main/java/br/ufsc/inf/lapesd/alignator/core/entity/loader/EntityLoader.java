@@ -81,7 +81,9 @@ public class EntityLoader {
                 }
                 JsonElement value = key.getValue();
                 if (value.isJsonPrimitive()) {
-                    entityValues.add(value.getAsString());
+                    String string = value.getAsString();
+                    if (!string.isEmpty())
+                        entityValues.add(string);
                 } else {
                     String innerObject = value.toString();
                     entityValues.addAll(extractValues(innerObject));
