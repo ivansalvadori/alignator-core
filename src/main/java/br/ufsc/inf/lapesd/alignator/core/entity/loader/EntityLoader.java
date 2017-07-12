@@ -1,13 +1,10 @@
 package br.ufsc.inf.lapesd.alignator.core.entity.loader;
 
+import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -17,14 +14,27 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RiotException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import static org.apache.commons.io.IOUtils.toInputStream;
+
 @Component
 public class EntityLoader {
+    private static final Logger logger = LoggerFactory.getLogger(EntityLoader.class);
 
     public List<String> loadEntitiesFromServices(String exampleOfEntity, ServiceDescription semanticMicroserviceDescription) {
         List<String> extractedValues = new ArrayList<>(extractValues(exampleOfEntity));
@@ -68,27 +78,24 @@ public class EntityLoader {
         return listOfLinksToVisit;
     }
 
+
     protected Set<String> extractValues(String exampleOfEntity) {
         Set<String> entityValues = new HashSet<>();
 
-        JsonElement parsedEntity = new JsonParser().parse(exampleOfEntity);
-        if (parsedEntity.isJsonObject()) {
-            JsonObject jsonObject = parsedEntity.getAsJsonObject();
-            Set<Entry<String, JsonElement>> keys = jsonObject.entrySet();
-            for (Entry<String, JsonElement> key : keys) {
-                if (key.getKey().equals("@id") || key.getKey().equals("@type")) {
-                    continue;
-                }
-                JsonElement value = key.getValue();
-                if (value.isJsonPrimitive()) {
-                    String string = value.getAsString();
-                    if (!string.isEmpty())
-                        entityValues.add(string);
-                } else {
-                    String innerObject = value.toString();
-                    entityValues.addAll(extractValues(innerObject));
-                }
-            }
+        Model model = ModelFactory.createDefaultModel();
+        try {
+            RDFDataMgr.read(model, toInputStream(exampleOfEntity, "UTF-8"), Lang.JSONLD);
+        } catch (IOException|RiotException e ) {
+            logger.error("Problem parsing JSONLD", e);
+            return Collections.emptySet();
+        }
+
+        StmtIterator it = model.listStatements();
+        while (it.hasNext()) {
+            Statement s = it.next();
+            if (!s.getObject().isLiteral()) continue;
+            String lexicalForm = s.getLiteral().getLexicalForm();
+            if (!lexicalForm.isEmpty()) entityValues.add(lexicalForm);
         }
         return entityValues;
     }
@@ -98,7 +105,7 @@ public class EntityLoader {
         Client client = ClientBuilder.newClient();
         for (String link : linksToVisit) {
             WebTarget webTarget = client.target(link).queryParam("linkedatorOptions", "linkVerify");
-            Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
+            Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON, "application/ld+json");
             try {
                 Response response = invocationBuilder.get();
 
@@ -108,7 +115,6 @@ public class EntityLoader {
                     loadedEntities.add(loadedEntity);
                 }
             } catch (Exception e) {
-
             }
         }
         return loadedEntities;

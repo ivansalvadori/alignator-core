@@ -1,30 +1,22 @@
 package br.ufsc.inf.lapesd.alignator.core.ontology.manager;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.ResIterator;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -79,93 +71,83 @@ public class OntologyManager {
 
     public void addEntitiesToOntology(List<String> entities) {
         for (String entity : entities) {
-            createAndAddIndividual(entity);
+            addIndividuals(entity);
         }
     }
 
-    private Individual createAndAddIndividual(String entity) {
-        Individual individual = null;
-        if (this.mapAddedIndividuals.get(hashString(entity)) != null) {
-            return null;
-        }
+    private void addIndividuals(String entity) {
+        if (this.mapAddedIndividuals.get(hashString(entity)) != null)
+            return;
 
         try {
-            JsonElement parsedEntity = new JsonParser().parse(entity);
-            if (parsedEntity.isJsonObject()) {
-                JsonObject jsonObject = parsedEntity.getAsJsonObject();
-                Set<Entry<String, JsonElement>> propertiesAndValues = jsonObject.entrySet();
-                boolean hasType = false;
-                for (Entry<String, JsonElement> entry : propertiesAndValues) {
-                    if (entry.getKey().equals("@type")) {
-                        hasType = true;
-                    }
-                }
-                if (!hasType) {
-                    // TODO take a look at the ontology to check if this
-                    // property
-                    // has range. Range can be used as @type
-                    return null;
-                }
-                String individualType = jsonObject.get("@type").getAsString();
-
-                OntModel ontModel = getOntology(individualType);
-                if (ontModel == null) {
-                    return null;
-                }
-
-                // Ontology size control
-                int numberOfIndividuals = 0;
-                ExtendedIterator<Individual> listIndividuals = ontModel.listIndividuals();
-                if (listIndividuals != null) {
-                    numberOfIndividuals = listIndividuals.toList().size();
-                }
-
-                if (numberOfIndividuals > this.ontologyMaxIndividuals) {
-                    String baseName = ontModel.getNsPrefixURI("");
-                    OntModel ontModelWithoutIndividuals = this.mapPrefixOriginalOntology.get(baseName);
-                    ontModel.removeAll();
-                    ontModel.add(ontModelWithoutIndividuals);
-                }
-
-                OntClass classOfIndividual = ontModel.getOntClass(individualType);
-                individual = classOfIndividual.createIndividual();
-
-                for (Entry<String, JsonElement> entityPropertyAndValue : propertiesAndValues) {
-                    String propertyKey = entityPropertyAndValue.getKey();
-                    if (propertyKey.equals("@id") || propertyKey.equals("@type")) {
-                        continue;
-                    }
-                    JsonElement value = entityPropertyAndValue.getValue();
-                    if (value.isJsonObject()) {
-                        Individual innerIndividual = createAndAddIndividual(value.toString());
-                        if (innerIndividual != null) {
-                            individual.addProperty(ontModel.getProperty(propertyKey), innerIndividual);
-                        }
-                    }
-
-                    if (value.isJsonPrimitive()) {
-                        String propertyValue = value.getAsString();
-                        propertyValue = StringEscapeUtils.escapeXml11(propertyValue);
-                        individual.addProperty(ontModel.getProperty(propertyKey), propertyValue);
-                    }
-                }
+            Model model = ModelFactory.createDefaultModel();
+            RDFDataMgr.read(model, IOUtils.toInputStream(entity, "UTF-8"), Lang.JSONLD);
+            ResIterator it = model.listSubjectsWithProperty(RDF.type);
+            while (it.hasNext()) {
+                addIndividual(it.next());
             }
-        } catch (Exception e) {
-            return null;
+
+        } catch (IOException e) {
+            logger.error("Exception when adding individuals", e);
         }
         mapAddedIndividuals.put(hashString(entity), entity);
+    }
+
+    private static class OntologyMatch {
+        final String base;
+        final OntClass ontClass;
+
+        private OntologyMatch(String base, OntClass ontClass) {
+            this.base = base;
+            this.ontClass = ontClass;
+        }
+    }
+
+    private Resource addIndividual(Resource resource) {
+        if (resource.hasProperty(RDF.type, OWL2.Class)
+                || resource.hasProperty(RDF.type, RDF.Property)
+                || resource.hasProperty(RDF.type, OWL2.DatatypeProperty)
+                || resource.hasProperty(RDF.type, OWL2.ObjectProperty))
+            return null;
+
+        OntologyMatch match = findOntology(resource);
+        if (match == null)
+            return null;
+        OntModel ontModel = this.getOntologyWithIndividuals(match.base);
+
+        // Ontology size control
+        if (ontModel.listIndividuals().toList().size() > this.ontologyMaxIndividuals) {
+            ontModel.removeAll();
+            ontModel.add(this.mapPrefixOriginalOntology.get(match.base));
+        }
+
+        Individual individual = match.ontClass.createIndividual();
+        StmtIterator stmtIt = resource.listProperties();
+        while (stmtIt.hasNext()) {
+            Statement s = stmtIt.next();
+            if (s.getObject().isLiteral()) {
+                ontModel.add(individual, s.getPredicate(), s.getObject());
+            } else {
+                //TODO objects will always be bnodes, doesn't this affect alignment?
+                Resource o = addIndividual(s.getResource());
+                if (o != null)
+                    ontModel.add(individual, s.getPredicate(), o);
+            }
+        }
         return individual;
     }
 
-    private OntModel getOntology(String entityType) {
-        Collection<OntModel> registeredOntologies = mapPrefixOntologyWithIndividuals.values();
-        for (OntModel registeredOntology : registeredOntologies) {
-            OntClass ontClass = registeredOntology.getOntClass(entityType);
-            if (ontClass != null) {
-                return registeredOntology;
+    private OntologyMatch findOntology(Resource resource) {
+        //TODO: this relies solely on type statements, apply basic inference from properties ranges
+        List<RDFNode> types = resource.getModel().listObjectsOfProperty(resource, RDF.type)
+                .toList().stream().filter(RDFNode::isURIResource).collect(Collectors.toList());
+        for (Entry<String, OntModel> e : mapPrefixOntologyWithIndividuals.entrySet()) {
+            for (RDFNode type : types) {
+                OntClass ontClass = e.getValue().getOntClass(type.asResource().getURI());
+                if(ontClass != null)
+                    return new OntologyMatch(e.getKey(), ontClass);
             }
         }
-
         return null;
     }
 
