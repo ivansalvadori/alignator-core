@@ -19,6 +19,9 @@ import java.util.Properties;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
 import org.semanticweb.owl.align.AlignmentException;
 import org.semanticweb.owl.align.Cell;
 import org.springframework.stereotype.Component;
@@ -94,8 +97,15 @@ public class AromaOntologyMatcher {
             allAlignments.addAll(alignments);
             for (Alignment alignment : alignments) {
                 // System.out.println(alignment);
-                mergedModel.getOntProperty(alignment.getUri1()).addEquivalentProperty(mergedModel.getOntProperty(alignment.getUri2()));
-                mergedModel.getOntProperty(alignment.getUri2()).addEquivalentProperty(mergedModel.getOntProperty(alignment.getUri1()));
+                Resource left = mergedModel.createResource(alignment.getUri1());
+                Resource right = mergedModel.createResource(alignment.getUri2());
+                if (left.hasProperty(RDF.type, OWL2.Class)) {
+                    left.addProperty(OWL2.equivalentClass, right);
+                    right.addProperty(OWL2.equivalentClass, left);
+                } else {
+                    left.addProperty(OWL2.equivalentProperty, right);
+                    right.addProperty(OWL2.equivalentProperty, left);
+                }
             }
         }
 
