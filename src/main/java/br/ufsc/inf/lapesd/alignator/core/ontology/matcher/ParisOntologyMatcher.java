@@ -156,6 +156,6 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return list.stream();
+        return list.stream().filter(a -> a.getStrength() >= threshold);
     }
 }
