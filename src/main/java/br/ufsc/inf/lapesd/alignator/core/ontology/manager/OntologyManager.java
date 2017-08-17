@@ -151,6 +151,7 @@ public class OntologyManager {
         // Ontology size control
         if (countIndividuals(ontModel) > this.ontologyMaxIndividuals) {
             ontModel.removeAll();
+            individualsCount.remove(ontModel);
             ontModel.add(this.mapPrefixOriginalOntology.get(match.base));
         }
 
