@@ -1,0 +1,25 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix adua: <http://absurd-translations.com.br/adua/0.1/>.
+@prefix faof: <http://snlmx.com/faof/0.1/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+foaf:name         owl:equivalentProperty faof:eman,         adua:nome.
+foaf:img          owl:equivalentProperty faof:gmi,          adua:img.
+foaf:nick         owl:equivalentProperty faof:kcin,         adua:alcunha.
+foaf:publications owl:equivalentProperty faof:snoitacilbup, adua:publications.
+foaf:title        owl:equivalentProperty faof:title,        adua:title.
+foaf:age          owl:equivalentProperty faof:age,          adua:idade.
+
+faof:eman         owl:equivalentProperty foaf:name,         adua:nome.
+faof:gmi          owl:equivalentProperty foaf:img,          adua:img.
+faof:kcin         owl:equivalentProperty foaf:nick,         adua:alcunha.
+faof:snoitacilbup owl:equivalentProperty foaf:publications, adua:publications.
+faof:title        owl:equivalentProperty foaf:title,        adua:title.
+faof:age          owl:equivalentProperty foaf:age,          adua:idade.
+
+adua:nome          owl:equivalentProperty faof:eman,         foaf:name.
+adua:img           owl:equivalentProperty faof:gmi,          foaf:img.
+adua:alcunha       owl:equivalentProperty faof:kcin,         foaf:nick.
+adua:publications  owl:equivalentProperty faof:snoitacilbup, foaf:publi.
+adua:title         owl:equivalentProperty faof:title,        foaf:title.
+adua:idade         owl:equivalentProperty faof:age,          foaf:age.

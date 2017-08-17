@@ -1,0 +1,71 @@
+@prefix adua: <http://absurd-translations.com.br/adua/0.1/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix svc: <http://svc2.example.org/person/>.
+
+
+svc:Peter a adua:SerHumano;
+    adua:nome "Petrus Josephus Wilhelmus Debye";
+    adua:alcunha "peter";
+    adua:birthday "03-24";
+    adua:idade "43";
+    adua:titulo "Dr.";
+    adua:publications svc:Peter-Lattes.
+
+svc:Irving a adua:SerHumano;
+    adua:nome "Irving Langmuir";
+    adua:alcunha "irving";
+    adua:birthday "01-31";
+    adua:idade "46";
+    adua:titulo "Dr.";
+    adua:publications svc:Irving-Lattes.
+
+svc:Martin a adua:SerHumano;
+    adua:nome "Martin Knudsen";
+    adua:alcunha "martin";
+    adua:birthday "02-15";
+    adua:idade "56";
+    adua:titulo "Dr.";
+    adua:publications svc:Martin-Lattes.
+
+svc:Peter a adua:SerHumano;
+    adua:nome "Petrus Josephus Wilhelmus Debye";
+    adua:alcunha "peter";
+    adua:birthday "03-24";
+    adua:idade "43";
+    adua:titulo "Dr.";
+    adua:publications svc:Peter-Lattes.
+
+svc:Auguste a adua:SerHumano;
+    adua:nome "Auguste Antoine Piccard";
+    adua:alcunha "auguste";
+    adua:birthday "01-28";
+    adua:idade "43";
+    adua:titulo "Dr.";
+    adua:publications svc:Auguste-Lattes.
+
+svc:William a adua:SerHumano;
+    adua:nome "William Lawrence Bragg";
+    adua:alcunha "william";
+    adua:birthday "07-01";
+    adua:idade "56";
+    adua:titulo "Dr.";
+    adua:publications svc:William-Lattes.
+
+svc:Emile a adua:SerHumano;
+    adua:nome "Émile Henriot";
+    adua:alcunha "emile";
+    adua:birthday "07-02";
+    adua:idade "42";
+    adua:titulo "Dr.";
+    adua:publications svc:Emile-Lattes.
+
+svc:Paul a adua:SerHumano;
+    adua:nome "Paul Ehrenfest";
+    adua:alcunha "paul";
+    adua:birthday "01-18";
+    adua:idade "47";
+    adua:titulo "Dr.";
+    adua:publications svc:Paul-Lattes.
+    

@@ -1,0 +1,25 @@
+@prefix foaf-1: <http://xmlns.com/foaf/0.1/>.
+@prefix foaf-2: <http://xmlns-2.com/foaf/0.1/>.
+@prefix foaf-3: <http://xmlns-3.com/foaf/0.1/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+foaf-1:name         owl:equivalentProperty foaf-1:name        , foaf-2:name         .
+foaf-1:img          owl:equivalentProperty foaf-1:img         , foaf-2:img          .
+foaf-1:nick         owl:equivalentProperty foaf-1:nick        , foaf-2:nick         .
+foaf-1:publications owl:equivalentProperty foaf-1:publications, foaf-2:publications .
+foaf-1:title        owl:equivalentProperty foaf-1:title       , foaf-2:title        .
+foaf-1:age          owl:equivalentProperty foaf-1:age         , foaf-2:age          .
+
+foaf-1:name         owl:equivalentProperty foaf-1:name        , foaf-2:name         .
+foaf-1:img          owl:equivalentProperty foaf-1:img         , foaf-2:img          .
+foaf-1:nick         owl:equivalentProperty foaf-1:nick        , foaf-2:nick         .
+foaf-1:publications owl:equivalentProperty foaf-1:publications, foaf-2:publications .
+foaf-1:title        owl:equivalentProperty foaf-1:title       , foaf-2:title        .
+foaf-1:age          owl:equivalentProperty foaf-1:age         , foaf-2:age          .
+
+foaf-2:name         owl:equivalentProperty foaf-1:name        , foaf-1:name         .
+foaf-2:img          owl:equivalentProperty foaf-1:img         , foaf-1:img          .
+foaf-2:nick         owl:equivalentProperty foaf-1:nick        , foaf-1:nick         .
+foaf-2:publications owl:equivalentProperty foaf-1:publications, foaf-1:publications .
+foaf-2:title        owl:equivalentProperty foaf-1:title       , foaf-1:title        .
+foaf-2:age          owl:equivalentProperty foaf-1:age         , foaf-1:age          .

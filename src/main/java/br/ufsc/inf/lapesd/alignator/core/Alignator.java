@@ -1,8 +1,6 @@
 package br.ufsc.inf.lapesd.alignator.core;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -12,10 +10,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.Combinations;
+import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.OntologyMatcher;
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -23,20 +33,19 @@ import org.springframework.stereotype.Component;
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.EntityLoader;
 import br.ufsc.inf.lapesd.alignator.core.entity.loader.ServiceDescription;
 import br.ufsc.inf.lapesd.alignator.core.ontology.manager.OntologyManager;
-import br.ufsc.inf.lapesd.alignator.core.ontology.matcher.AromaOntologyMatcher;
 import br.ufsc.inf.lapesd.alignator.core.report.EntityLoaderReport;
 import br.ufsc.inf.lapesd.alignator.core.report.OntologyManagerReport;
 
 @Component
 @Scope("prototype")
 public class Alignator {
-
+    private final String MERGED_ONT_FILENAME = "alignator-merged-ontology.owl";
     private int executionCount = 0;
     private List<EntityLoaderReport> entityLoaderReportList = new ArrayList<>();
     private List<OntologyManagerReport> ontologyManagerReportList = new ArrayList<>();
 
     @Autowired
-    private AromaOntologyMatcher aromaOntologyMatcher = new AromaOntologyMatcher();
+    private OntologyMatcher ontologyMatcher;
 
     @Autowired
     private OntologyManager ontologyManager = new OntologyManager();
@@ -65,24 +74,24 @@ public class Alignator {
 
     private void updateMergedOntology(String ontology) {
 
-        OntModel currentModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        Model currentModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
         StringReader sr2 = new StringReader(ontology);
         currentModel.read(sr2, null, "RDF/XML");
 
-        OntModel mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        Model mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
         try {
-            String mergedOntology = new String(Files.readAllBytes(Paths.get("alignator-merged-ontology.owl")));
+            String mergedOntology = new String(Files.readAllBytes(Paths.get(MERGED_ONT_FILENAME)));
             StringReader sr = new StringReader(mergedOntology);
             mergedModel.read(sr, null, "RDF/XML");
             mergedModel.add(currentModel);
-            try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
+            try (FileWriter out = new FileWriter(MERGED_ONT_FILENAME)) {
                 mergedModel.write(out, "RDF/XML");
                 mergedModel.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         } catch (IOException e) {
-            try (FileWriter out = new FileWriter("alignator-merged-ontology.owl")) {
+            try (FileWriter out = new FileWriter(MERGED_ONT_FILENAME)) {
                 currentModel.write(out, "RDF/XML");
                 currentModel.close();
             } catch (IOException ex) {
@@ -104,7 +113,7 @@ public class Alignator {
         for (String baseNamespace : ontologyBaseNamespaces) {
             List<ServiceDescription> serviceDescriptions = mapOntologyBaseNamespaceServiceDesciptions.get(baseNamespace);
             for (ServiceDescription semanticMicroserviceDescription : serviceDescriptions) {
-                List<String> loadedEntities = new ArrayList<>();
+                List<String> loadedEntities;
                 loadedEntities = entityLoader.loadEntitiesFromServices(exampleOfEntity, semanticMicroserviceDescription);
                 loadedEntities.add(exampleOfEntity);
                 ontologyManager.addEntitiesToOntology(loadedEntities);
@@ -112,13 +121,18 @@ public class Alignator {
             }
         }
 
-        Collection<OntModel> allOntologiesWithEntities = ontologyManager.getAllOntologiesWithEntities();
+        Collection<OntModel> ontModels = ontologyManager.getAllOntologiesWithEntities();
+        Collection<Model> ontologies = new ArrayList<>(ontModels);
 
         List<Alignment> alignments = null;
         long matcherTime = 0;
 
         Date matcherStart = new Date();
-        alignments = aromaOntologyMatcher.align(allOntologiesWithEntities);
+        try {
+            alignments = align(ontologies);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Date matcherFinish = new Date();
         matcherTime = matcherFinish.getTime() - matcherStart.getTime();
 
@@ -128,6 +142,26 @@ public class Alignator {
         this.executionCount++;
         createEntityLoaderReport(totalLoadedEntities, alignments, matcherTime, alignatorTime);
         crateOntologyManagerReport();
+    }
+
+    private List<Alignment> align(Collection<Model> ontologies) throws Exception {
+        Preconditions.checkArgument(ontologies.size() >= 2);
+        List<Alignment> allAlignments;
+
+        final Model mergedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        try {
+            try (FileInputStream r = new FileInputStream(MERGED_ONT_FILENAME)) {
+                RDFDataMgr.read(mergedModel, r, Lang.RDFXML);
+            }
+            allAlignments = ontologyMatcher.align(mergedModel, ontologies);
+            try (FileOutputStream out = new FileOutputStream(MERGED_ONT_FILENAME)) {
+                RDFDataMgr.write(out, mergedModel, Lang.RDFXML);
+            }
+        } finally {
+            mergedModel.close();
+        }
+
+        return allAlignments;
     }
 
     private void crateOntologyManagerReport() {
