@@ -8,41 +8,43 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 @Component
 public class OntologyManager {
     private static final Logger logger = LoggerFactory.getLogger(OntologyManager.class);
 
     private Map<String, String> mapAddedIndividuals = new HashMap<>();
-    private Map<String, OntModel> mapPrefixOriginalOntology = new HashMap<>();
-    private Map<String, OntModel> mapPrefixOntologyWithIndividuals = new HashMap<>();
+    private Map<String, Model> mapPrefixOriginalOntology = new HashMap<>();
+    private Map<String, Model> mapPrefixOntologyWithIndividuals = new HashMap<>();
+    /* weak keys as countIndividuals() is public and <bold>could</bold> receive alien models */
+    private WeakHashMap<Model, Integer> individualsCount = new WeakHashMap<>();
     private int ontologyMaxIndividuals = 1000;
 
+    private static final Set<Resource> notIndividualClasses;
+
+    static {
+        notIndividualClasses = new HashSet<>();
+        notIndividualClasses.addAll(Arrays.asList(OWL2.Class, RDFS.Class));
+    }
+
     /**
-     * @param ontology
+     * @param ontologyString
      *            is the string representation of an ontology
      * @return the registered ontology's base namespace
      */
-    public String registerOntology(String ontology) {
+    public String registerOntology(String ontologyString) {
+        Model ontology = loadOntology(ontologyString);
         String baseNamespace = getBaseNamespace(ontology);
 
         if (mapPrefixOriginalOntology.containsKey(baseNamespace)) {
@@ -50,14 +52,16 @@ public class OntologyManager {
             // throw new OntologyAlreadyRegisteredException();
         }
 
-        mapPrefixOriginalOntology.put(baseNamespace, loadOntology(ontology));
-        mapPrefixOntologyWithIndividuals.put(baseNamespace, loadOntology(ontology));
+        mapPrefixOriginalOntology.put(baseNamespace, ontology);
+        Model model = ModelFactory.createDefaultModel();
+        model.add(ontology);
+        mapPrefixOntologyWithIndividuals.put(baseNamespace, model);
         System.out.println(String.format("Ontology with base namespace <%s> has been sucessfully registered!", baseNamespace));
         return baseNamespace;
     }
 
-    private OntModel loadOntology(String ontology) {
-        OntModel ontoModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
+    private Model loadOntology(String ontology) {
+        Model ontoModel = ModelFactory.createDefaultModel();
 
         try (InputStream in = new ByteArrayInputStream(ontology.getBytes(StandardCharsets.UTF_8));) {
             ontoModel.read(in, null);
@@ -95,12 +99,41 @@ public class OntologyManager {
 
     private static class OntologyMatch {
         final String base;
-        final OntClass ontClass;
+        final Resource ontClass;
 
-        private OntologyMatch(String base, OntClass ontClass) {
+        private OntologyMatch(String base, Resource ontClass) {
+            Preconditions.checkArgument(ontClass.getModel() != null);
             this.base = base;
             this.ontClass = ontClass;
         }
+    }
+
+    public Resource createIndividual(OntologyMatch match) {
+        Model model = match.ontClass.getModel();
+        Integer old = individualsCount.get(model);
+        if (old != null)
+            individualsCount.put(model, old+1);
+        return model.createResource(match.ontClass);
+    }
+
+    public int countIndividuals(Model model) {
+        Integer cached = individualsCount.get(model);
+        if (cached != null) return cached;
+
+        int count = 0;
+        Set<Resource> visited = new HashSet<>();
+        StmtIterator it = model.listStatements(null, RDF.type, (RDFNode) null);
+        while (it.hasNext()) {
+            Statement s = it.next();
+            if (visited.contains(s.getSubject()) || !s.getObject().isResource()) continue;
+
+            visited.add(s.getSubject());
+            Resource clazz = s.getResource();
+            if (!notIndividualClasses.contains(clazz)) ++count;
+        }
+
+        individualsCount.put(model, count);
+        return count;
     }
 
     private Resource addIndividual(Resource resource) {
@@ -113,15 +146,15 @@ public class OntologyManager {
         OntologyMatch match = findOntology(resource);
         if (match == null)
             return null;
-        OntModel ontModel = this.getOntologyWithIndividuals(match.base);
+        Model ontModel = this.getOntologyWithIndividuals(match.base);
 
         // Ontology size control
-        if (ontModel.listIndividuals().toList().size() > this.ontologyMaxIndividuals) {
+        if (countIndividuals(ontModel) > this.ontologyMaxIndividuals) {
             ontModel.removeAll();
             ontModel.add(this.mapPrefixOriginalOntology.get(match.base));
         }
 
-        Individual individual = match.ontClass.createIndividual();
+        Resource individual = createIndividual(match);
         StmtIterator stmtIt = resource.listProperties();
         while (stmtIt.hasNext()) {
             Statement s = stmtIt.next();
@@ -141,9 +174,9 @@ public class OntologyManager {
         //TODO: this relies solely on type statements, apply basic inference from properties ranges
         List<RDFNode> types = resource.getModel().listObjectsOfProperty(resource, RDF.type)
                 .toList().stream().filter(RDFNode::isURIResource).collect(Collectors.toList());
-        for (Entry<String, OntModel> e : mapPrefixOntologyWithIndividuals.entrySet()) {
+        for (Entry<String, Model> e : mapPrefixOntologyWithIndividuals.entrySet()) {
             for (RDFNode type : types) {
-                OntClass ontClass = e.getValue().getOntClass(type.asResource().getURI());
+                Resource ontClass = e.getValue().createResource(type.asResource().getURI());
                 if(ontClass != null)
                     return new OntologyMatch(e.getKey(), ontClass);
             }
@@ -151,9 +184,7 @@ public class OntologyManager {
         return null;
     }
 
-    private String getBaseNamespace(String ontology) {
-        OntModel model = loadOntology(ontology);
-
+    private String getBaseNamespace(Model model) {
         List<String> nss = new ArrayList<>();
         /*
          * Alignator assumed xml:base was the ontology identifier. For backward
@@ -183,7 +214,7 @@ public class OntologyManager {
         return selected;
     }
 
-    private String getMostFrequentSubjectNs(OntModel model) {
+    private String getMostFrequentSubjectNs(Model model) {
         HashMap<String, Integer> histogram = new HashMap<>();
         ResIterator it = model.listSubjectsWithProperty(RDF.type);
         while (it.hasNext()) {
@@ -199,8 +230,8 @@ public class OntologyManager {
     public List<String> getAllStringOntologiesWithEntities() {
         List<String> ontologiesWithEntities = new ArrayList<>();
 
-        Collection<OntModel> ontologies = this.mapPrefixOntologyWithIndividuals.values();
-        for (OntModel ontModel : ontologies) {
+        Collection<Model> ontologies = this.mapPrefixOntologyWithIndividuals.values();
+        for (Model ontModel : ontologies) {
             try (StringWriter stringWriter = new StringWriter()) {
                 ontModel.write(stringWriter, "N3");
                 String writtenText = stringWriter.toString();
@@ -217,16 +248,16 @@ public class OntologyManager {
         return this.mapPrefixOntologyWithIndividuals.keySet();
     }
 
-    public Collection<OntModel> getAllOntologiesWithEntities() {
+    public Collection<Model> getAllOntologiesWithEntities() {
         return this.mapPrefixOntologyWithIndividuals.values();
     }
 
-    public OntModel getOntologyWithIndividuals(String baseNamespace) {
+    public Model getOntologyWithIndividuals(String baseNamespace) {
         return this.mapPrefixOntologyWithIndividuals.get(baseNamespace);
     }
 
     public String getStringOntologyWithIndividuals(String baseNamespace) {
-        OntModel ontModel = this.mapPrefixOntologyWithIndividuals.get(baseNamespace);
+        Model ontModel = this.mapPrefixOntologyWithIndividuals.get(baseNamespace);
         try (StringWriter stringWriter = new StringWriter()) {
             ontModel.write(stringWriter, "RDF/XML");
             String writtenText = stringWriter.toString();
