@@ -1,12 +1,14 @@
 package br.ufsc.inf.lapesd.alignator.core.ontology.matcher;
 
 import br.ufsc.inf.lapesd.alignator.core.Alignment;
+import com.google.common.base.Stopwatch;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.Lang;
 import org.springframework.stereotype.Component;
@@ -20,24 +22,35 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static br.ufsc.inf.lapesd.alignator.core.ontology.matcher.MatcherUtils.incorporateAlignments;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Component
 public class ParisOntologyMatcher implements OntologyMatcher  {
     public static final double DEFAULT_THRESHOLD = 0.8;
+    public static final int DEFAULT_TIMES_WINDOW = 100;
+    public static final long MIN_MAX_WAIT = MILLISECONDS.convert(15, SECONDS);
     private final double threshold;
+    private final int timesWindow;
 
-    public ParisOntologyMatcher(double threshold) {
+    private final Queue<Double> times;
+
+    public ParisOntologyMatcher(double threshold, int timesWindow) {
         this.threshold = threshold;
+        this.timesWindow = timesWindow;
+        times = new ArrayDeque<>(timesWindow);
     }
 
     public ParisOntologyMatcher() {
-        this(DEFAULT_THRESHOLD);
+        this(DEFAULT_THRESHOLD, DEFAULT_TIMES_WINDOW);
     }
+
 
     @Override
     public List<Alignment> align(@Nonnull Model mergedModel,
@@ -66,6 +79,7 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
         File home = new File(parisDir, "home");
         File settingsFile = new File(parisDir, "settings");
 
+
         try {
             if (store1.exists()) FileUtils.deleteDirectory(store1);
             if (store2.exists()) FileUtils.deleteDirectory(store2);
@@ -87,10 +101,12 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
             Files.move(left.toPath(), new File(store1, left.getName()).toPath());
             Files.move(right.toPath(), new File(store2, right.getName()).toPath());
             try {
-                Paris.main(new String[]{settingsFile.getPath()});
-                List<Alignment> alignments = getResults(results, "superrelations1");
-                alignments.addAll(getResults(results, "superclasses1"));
-                return alignments;
+                if (runParis(settingsFile)) {
+                    List<Alignment> alignments = getResults(results, "superrelations1");
+                    alignments.addAll(getResults(results, "superclasses1"));
+                    return alignments;
+                }
+                return Collections.emptyList();
             } finally {
                 Files.move(new File(store1, left.getName()).toPath(), left.toPath());
                 Files.move(new File(store2, right.getName()).toPath(), right.toPath());
@@ -102,6 +118,42 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
             if (home.exists())         FileUtils.deleteDirectory(home);
             if (settingsFile.exists()) FileUtils.deleteQuietly(settingsFile);
         }
+    }
+
+    private boolean runParis(File settingsFile) throws Exception {
+        Future<Object> future = Executors.newFixedThreadPool(1).submit(() -> {
+            Paris.main(new String[]{settingsFile.getPath()});
+            return null;
+        });
+
+        double[] doubles = new double[times.size()];
+        int i = 0;
+        for (Double value : times) doubles[i++] = value;
+
+        /* Turkey's test for "far out" data */
+        double q1 = new Percentile(25.0).evaluate(doubles),
+                q3 = new Percentile(75.0).evaluate(doubles);
+        double turkey = Math.ceil(q3 + 3 * (q3 - q1));
+        long maxWait = !Double.isFinite(turkey) ? MIN_MAX_WAIT
+                : (long) Math.max(MIN_MAX_WAIT, turkey) ;
+
+        Stopwatch watch = Stopwatch.createStarted();
+        try {
+            future.get(maxWait, MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            return false;
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof Exception) throw (Exception) e.getCause();
+            throw e;
+        }
+
+        if (times.size() >= timesWindow)
+            times.remove();
+        times.add(watch.elapsed(TimeUnit.MICROSECONDS) / 1000.0);
+        return true;
     }
 
     private List<Alignment> getResults(File results, String tsvName) throws IOException {
@@ -156,6 +208,6 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return list.stream();
+        return list.stream().filter(a -> a.getStrength() >= threshold);
     }
 }
