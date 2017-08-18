@@ -1,0 +1,79 @@
+@prefix foaf: <http://xmlns-2.com/foaf/0.1/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix svc: <http://svc2.example.org/person/>.
+
+
+svc:Peter a foaf:Person;
+    foaf:name "Petrus Josephus Wilhelmus Debye";
+    foaf:nick "peter";
+    foaf:birthday "03-24";
+    foaf:age "43";
+    foaf:title "Dr.";
+    foaf:img svc:Peter-Image;
+    foaf:publications svc:Peter-Publications.
+
+svc:Irving a foaf:Person;
+    foaf:name "Irving Langmuir";
+    foaf:nick "irving";
+    foaf:birthday "01-31";
+    foaf:age "46";
+    foaf:title "Dr.";
+    foaf:img svc:Irving-Image;
+    foaf:publications svc:Irving-Publications.
+
+
+svc:Martin a foaf:Person;
+    foaf:name "Martin Knudsen";
+    foaf:nick "martin";
+    foaf:birthday "02-15";
+    foaf:age "56";
+    foaf:title "Dr.";
+    foaf:img svc:Martin-Image;
+    foaf:publications svc:Martin-Publications.
+
+svc:Peter a foaf:Person;
+    foaf:name "Petrus Josephus Wilhelmus Debye";
+    foaf:nick "peter";
+    foaf:birthday "03-24";
+    foaf:age "43";
+    foaf:title "Dr.";
+    foaf:img svc:Peter-Image;
+    foaf:publications svc:Peter-Publications.
+
+svc:Auguste a foaf:Person;
+    foaf:name "Auguste Antoine Piccard";
+    foaf:nick "auguste";
+    foaf:birthday "01-28";
+    foaf:age "43";
+    foaf:title "Dr.";
+    foaf:img svc:Auguste-Image;
+    foaf:publications svc:Auguste-Publications.
+
+svc:William a foaf:Person;
+    foaf:name "William Lawrence Bragg";
+    foaf:nick "william";
+    foaf:birthday "07-01";
+    foaf:age "56";
+    foaf:title "Dr.";
+    foaf:img svc:William-Image;
+    foaf:publications svc:William-Publications.
+
+svc:Emile a foaf:Person;
+    foaf:name "Émile Henriot";
+    foaf:nick "emile";
+    foaf:birthday "07-02";
+    foaf:age "42";
+    foaf:title "Dr.";
+    foaf:img svc:Emile-Image;
+    foaf:publications svc:Emile-Publications.
+
+svc:Paul a foaf:Person;
+    foaf:name "Paul Ehrenfest";
+    foaf:nick "paul";
+    foaf:birthday "01-18";
+    foaf:age "47";
+    foaf:title "Dr.";
+    foaf:img svc:Paul-Image;
+    foaf:publications svc:Paul-Publications.

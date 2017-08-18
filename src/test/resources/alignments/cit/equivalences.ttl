@@ -1,0 +1,11 @@
+@prefix o0: <http://ontology0#>.
+@prefix o1: <http://ontology1#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+o0:o0p1 owl:equivalentProperty o1:o1p1.
+o0:o0p2 owl:equivalentProperty o1:o1p2.
+o0:o0p3 owl:equivalentProperty o1:o1p3.
+
+o1:o1p1 owl:equivalentProperty o0:o0p1.
+o1:o1p2 owl:equivalentProperty o0:o0p2.
+o1:o1p3 owl:equivalentProperty o0:o0p3.

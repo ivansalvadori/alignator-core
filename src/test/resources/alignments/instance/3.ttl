@@ -1,0 +1,78 @@
+@prefix faof: <http://snlmx.com/faof/0.1/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix svc: <http://svc3.example.org/person/>.
+
+
+svc:Peter a faof:Person;
+    faof:eman "Petrus Josephus Wilhelmus Debye";
+    faof:kcin "peter";
+    faof:birthday "03-24";
+    faof:age "43";
+    faof:title "Dr.";
+    faof:gmi svc:Peter-Image;
+    faof:snoitacilbup svc:Peter-Publications.
+
+svc:Irving a faof:Person;
+    faof:eman "Irving Langmuir";
+    faof:kcin "irving";
+    faof:birthday "01-31";
+    faof:age "46";
+    faof:title "Dr.";
+    faof:gmi svc:Irving-Image;
+    faof:snoitacilbup svc:Irving-Publications.
+
+svc:Martin a faof:Person;
+    faof:eman "Martin Knudsen";
+    faof:kcin "martin";
+    faof:birthday "02-15";
+    faof:age "56";
+    faof:title "Dr.";
+    faof:gmi svc:Martin-Image;
+    faof:snoitacilbup svc:Martin-Publications.
+
+svc:Peter a faof:Person;
+    faof:eman "Petrus Josephus Wilhelmus Debye";
+    faof:kcin "peter";
+    faof:birthday "03-24";
+    faof:age "43";
+    faof:title "Dr.";
+    faof:gmi svc:Peter-Image;
+    faof:snoitacilbup svc:Peter-Publications.
+
+svc:Auguste a faof:Person;
+    faof:eman "Auguste Antoine Piccard";
+    faof:kcin "auguste";
+    faof:birthday "01-28";
+    faof:age "43";
+    faof:title "Dr.";
+    faof:gmi svc:Auguste-Image;
+    faof:snoitacilbup svc:Auguste-Publications.
+
+svc:William a faof:Person;
+    faof:eman "William Lawrence Bragg";
+    faof:kcin "william";
+    faof:birthday "07-01";
+    faof:age "56";
+    faof:title "Dr.";
+    faof:gmi svc:William-Image;
+    faof:snoitacilbup svc:William-Publications.
+
+svc:Emile a faof:Person;
+    faof:eman "Émile Henriot";
+    faof:kcin "emile";
+    faof:birthday "07-02";
+    faof:age "42";
+    faof:title "Dr.";
+    faof:gmi svc:Emile-Image;
+    faof:snoitacilbup svc:Emile-Publications.
+
+svc:Paul a faof:Person;
+    faof:eman "Paul Ehrenfest";
+    faof:kcin "paul";
+    faof:birthday "01-18";
+    faof:age "47";
+    faof:title "Dr.";
+    faof:gmi svc:Paul-Image;
+    faof:snoitacilbup svc:Paul-Publications.
