@@ -24,6 +24,7 @@ import fr.inrialpes.exmo.align.impl.ObjectAlignment;
 import fr.inrialpes.exmo.aroma.AROMA;
 
 import javax.annotation.Nonnull;
+import javax.annotation.PreDestroy;
 
 import static br.ufsc.inf.lapesd.alignator.core.ontology.matcher.MatcherUtils.incorporateAlignments;
 import static br.ufsc.inf.lapesd.alignator.core.ontology.matcher.MatcherUtils.serialize;
@@ -51,6 +52,12 @@ public class AromaOntologyMatcher implements OntologyMatcher {
         }
 
         return allAlignments;
+    }
+
+    @PreDestroy
+    @Override
+    public void close() {
+        /* nothing */
     }
 
     private List<Alignment> align(File pathToOntology1, File pathToOntology2) {
