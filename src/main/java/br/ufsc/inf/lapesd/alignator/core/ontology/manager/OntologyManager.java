@@ -178,7 +178,10 @@ public class OntologyManager {
         for (Entry<String, Model> e : mapPrefixOntologyWithIndividuals.entrySet()) {
             for (RDFNode type : types) {
                 Resource ontClass = e.getValue().createResource(type.asResource().getURI());
-                if(ontClass != null)
+                StmtIterator it = ontClass.listProperties();
+                boolean hasSubject = it.hasNext();
+                it.close();
+                if(hasSubject)
                     return new OntologyMatch(e.getKey(), ontClass);
             }
         }
