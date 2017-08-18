@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import paris.Paris;
 
 import javax.annotation.Nonnull;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -40,11 +41,13 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
     private final int timesWindow;
 
     private final Queue<Double> times;
+    private final ExecutorService executorService;
 
     public ParisOntologyMatcher(double threshold, int timesWindow) {
         this.threshold = threshold;
         this.timesWindow = timesWindow;
         times = new ArrayDeque<>(timesWindow);
+        executorService = Executors.newCachedThreadPool();
     }
 
     public ParisOntologyMatcher() {
@@ -69,6 +72,12 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
         }
 
         return allAlignments;
+    }
+
+    @PreDestroy
+    @Override
+    public void close() {
+        executorService.shutdown();
     }
 
     @Nonnull
@@ -121,7 +130,7 @@ public class ParisOntologyMatcher implements OntologyMatcher  {
     }
 
     private boolean runParis(File settingsFile) throws Exception {
-        Future<Object> future = Executors.newFixedThreadPool(1).submit(() -> {
+        Future<Object> future = executorService.submit(() -> {
             Paris.main(new String[]{settingsFile.getPath()});
             return null;
         });
